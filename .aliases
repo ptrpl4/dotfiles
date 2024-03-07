@@ -1,3 +1,7 @@
 # python
 alias pip=/usr/bin/pip3
 alias python=/usr/bin/python3
+
+# andorid emul
+alias android-1="emulator @Pixel_3a_API_34_extension_level_7_arm64-v8a -memory 1024 -partition-size 512 -no-boot-anim"
+alias android-2="emulator -avd Pixel_3_API_30 -memory 1024 -partition-size 512 -no-boot-anim"
