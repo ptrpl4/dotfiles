@@ -32,13 +32,14 @@ for file in "${files[@]}"; do
     ln -sf "${dotfile_dir}/.${file}" "${HOME}/.${file}"
 done
 
-###
-# Connection between config files
-
-# zshrc uses zprompt,aliases,private
- # zprompt uses .shared_prompt
-# bashrc uses bash_prompt aliases private
-
+# Purpose of configuration files
+## zshrc uses zprompt, aliases, private
+## zprompt uses shared_prompt
+## bashrc uses bash_prompt, aliases, private
+### zprompt
+#### shared_prompt
+### aliases
+### private
 
 ###
 # todo make aliases private => shared_
