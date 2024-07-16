@@ -2,7 +2,7 @@
   "bundleId" : "com.knollsoft.Rectangle",
   "defaults" : {
     "allowAnyShortcut" : {
-      "bool" : true
+      "bool" : false
     },
     "almostMaximizeHeight" : {
       "float" : 0
@@ -65,10 +65,10 @@
       "int" : 1
     },
     "footprintAlpha" : {
-      "float" : 0.30000001192092896
+      "float" : 0.3
     },
     "footprintAnimationDurationMultiplier" : {
-      "float" : 0.75
+      "float" : 0
     },
     "footprintBorderWidth" : {
       "float" : 2
@@ -86,7 +86,7 @@
       "float" : 0
     },
     "hideMenubarIcon" : {
-      "bool" : true
+      "bool" : false
     },
     "ignoreDragSnapToo" : {
       "int" : 0
@@ -95,7 +95,7 @@
       "int" : 0
     },
     "landscapeSnapAreas" : {
-
+      "string" : "[5,{\"action\":36},1,{\"action\":0},2,{\"compound\":-4},3,{\"action\":1},7,{\"compound\":-4},4,{\"action\":31},8,{\"action\":14},6,{\"action\":13}]"
     },
     "launchOnLogin" : {
       "bool" : true
@@ -188,7 +188,7 @@
       "float" : 190
     },
     "subsequentExecutionMode" : {
-      "int" : 0
+      "int" : 1
     },
     "SUEnableAutomaticChecks" : {
       "bool" : false
@@ -200,7 +200,7 @@
 
     },
     "todo" : {
-      "int" : 2
+      "int" : 0
     },
     "todoApplication" : {
 
@@ -225,12 +225,24 @@
     }
   },
   "shortcuts" : {
+    "almostMaximize" : {
+      "keyCode" : 23,
+      "modifierFlags" : 786432
+    },
     "bottomHalf" : {
       "keyCode" : 125,
-      "modifierFlags" : 1179648
+      "modifierFlags" : 786432
+    },
+    "bottomLeft" : {
+      "keyCode" : 38,
+      "modifierFlags" : 786432
+    },
+    "bottomRight" : {
+      "keyCode" : 40,
+      "modifierFlags" : 786432
     },
     "center" : {
-      "keyCode" : 8,
+      "keyCode" : 22,
       "modifierFlags" : 786432
     },
     "centerThird" : {
@@ -247,7 +259,7 @@
     },
     "larger" : {
       "keyCode" : 24,
-      "modifierFlags" : 1179648
+      "modifierFlags" : 786432
     },
     "lastThird" : {
       "keyCode" : 5,
@@ -259,11 +271,11 @@
     },
     "leftHalf" : {
       "keyCode" : 123,
-      "modifierFlags" : 1048576
+      "modifierFlags" : 786432
     },
     "maximize" : {
-      "keyCode" : 126,
-      "modifierFlags" : 1048576
+      "keyCode" : 36,
+      "modifierFlags" : 786432
     },
     "maximizeHeight" : {
       "keyCode" : 126,
@@ -283,15 +295,15 @@
     },
     "restore" : {
       "keyCode" : 51,
-      "modifierFlags" : 1179648
+      "modifierFlags" : 786432
     },
     "rightHalf" : {
       "keyCode" : 124,
-      "modifierFlags" : 1048576
+      "modifierFlags" : 786432
     },
     "smaller" : {
       "keyCode" : 27,
-      "modifierFlags" : 1179648
+      "modifierFlags" : 786432
     },
     "toggleTodo" : {
       "keyCode" : 11,
@@ -299,7 +311,15 @@
     },
     "topHalf" : {
       "keyCode" : 126,
-      "modifierFlags" : 1179648
+      "modifierFlags" : 786432
+    },
+    "topLeft" : {
+      "keyCode" : 32,
+      "modifierFlags" : 786432
+    },
+    "topRight" : {
+      "keyCode" : 34,
+      "modifierFlags" : 786432
     }
   },
   "version" : "82"

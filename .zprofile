@@ -4,7 +4,9 @@
 if [ -x "/opt/homebrew/bin/brew" ]; then
     # For Apple Silicon Macs
     export PATH="/opt/homebrew/bin:$PATH"
+    export PATH="/opt/homebrew/sbin:$PATH"
 fi
+
 
 ## Android Studio
 export ANDROID_HOME=~/Library/Android/sdk
