@@ -16,3 +16,6 @@ Thumbs.db
 # Private Information
 .private
 .gitconfig
+
+# Ignore backups
+/backups
