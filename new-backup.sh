@@ -10,4 +10,10 @@ mkdir -p "${backup_dir}"
 echo "Backup dir created /dotfile/backups"
 
 # copy list of installed apps
-ls /Applications | cat > "${backup_dir}"/"${apps_backup_file}"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Running on macOS
+    ls /Applications | cat > "${backup_dir}"/"${apps_backup_file}"
+    echo "Application list backed up"
+else
+    echo "Not running on macOS, skipping application backup"
+fi
