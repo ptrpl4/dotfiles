@@ -10,7 +10,7 @@ echo "Backup dir created /dotfile/backups"
 
 
 # List of files/folders to symlink in ${HOME}
-files=(zshrc zprompt zprofile bashrc bash_prompt bash_profile aliases private)
+files=(zshrc zprompt zprofile bashrc bash_prompt bash_profile aliases private gitconfig)
 
 # dotfiles directory
 dotfile_dir="${HOME}/dotfiles"
