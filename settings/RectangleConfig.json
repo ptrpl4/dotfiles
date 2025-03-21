@@ -1,6 +1,9 @@
 {
   "bundleId" : "com.knollsoft.Rectangle",
   "defaults" : {
+    "SUEnableAutomaticChecks" : {
+      "bool" : false
+    },
     "allowAnyShortcut" : {
       "bool" : false
     },
@@ -10,11 +13,11 @@
     "almostMaximizeWidth" : {
       "float" : 0
     },
-    "alternateDefaultShortcuts" : {
-      "bool" : true
-    },
     "altThirdCycle" : {
       "int" : 0
+    },
+    "alternateDefaultShortcuts" : {
+      "bool" : true
     },
     "alwaysAccountForStage" : {
       "int" : 0
@@ -34,10 +37,10 @@
     "cascadeAllDeltaSize" : {
       "float" : 30
     },
-    "centeredDirectionalMove" : {
+    "centerHalfCycles" : {
       "int" : 0
     },
-    "centerHalfCycles" : {
+    "centeredDirectionalMove" : {
       "int" : 0
     },
     "cornerSnapAreaSize" : {
@@ -45,6 +48,9 @@
     },
     "curtainChangeSize" : {
       "int" : 0
+    },
+    "cycleSizesIsChanged" : {
+      "bool" : true
     },
     "disabledApps" : {
 
@@ -84,6 +90,9 @@
     },
     "gapSize" : {
       "float" : 0
+    },
+    "hapticFeedbackOnSnap" : {
+      "int" : 0
     },
     "hideMenubarIcon" : {
       "bool" : false
@@ -145,11 +154,17 @@
     "screenEdgeGapRight" : {
       "float" : 0
     },
+    "screenEdgeGapTop" : {
+      "float" : 0
+    },
+    "screenEdgeGapTopNotch" : {
+      "float" : 0
+    },
     "screenEdgeGapsOnMainScreenOnly" : {
       "bool" : false
     },
-    "screenEdgeGapTop" : {
-      "float" : 0
+    "selectedCycleSizes" : {
+      "int" : 31
     },
     "shortEdgeSnapAreaSize" : {
       "float" : 145
@@ -188,10 +203,7 @@
       "float" : 190
     },
     "subsequentExecutionMode" : {
-      "int" : 1
-    },
-    "SUEnableAutomaticChecks" : {
-      "bool" : false
+      "int" : 0
     },
     "systemWideMouseDown" : {
       "int" : 0
@@ -254,7 +266,7 @@
       "modifierFlags" : 786432
     },
     "firstTwoThirds" : {
-      "keyCode" : 14,
+      "keyCode" : 33,
       "modifierFlags" : 786432
     },
     "larger" : {
@@ -266,7 +278,7 @@
       "modifierFlags" : 786432
     },
     "lastTwoThirds" : {
-      "keyCode" : 17,
+      "keyCode" : 30,
       "modifierFlags" : 786432
     },
     "leftHalf" : {
@@ -322,5 +334,5 @@
       "modifierFlags" : 786432
     }
   },
-  "version" : "82"
+  "version" : "92"
 }
