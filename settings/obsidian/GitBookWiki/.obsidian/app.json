@@ -1,0 +1,11 @@
+{
+  "newLinkFormat": "relative",
+  "useMarkdownLinks": true,
+  "attachmentFolderPath": "aaa-assets",
+  "showInlineTitle": false,
+  "showLineNumber": true,
+  "alwaysUpdateLinks": true,
+  "showUnsupportedFiles": true,
+  "readableLineLength": true,
+  "strictLineBreaks": true
+}
