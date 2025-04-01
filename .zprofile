@@ -1,4 +1,3 @@
-
 # Set PATHS
 ## Brew
 if [ -x "/opt/homebrew/bin/brew" ]; then
