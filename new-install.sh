@@ -3,7 +3,7 @@
 
 # Create the backup directory if it doesn't exist
 current_date=$(date +%Y-%m-%d)
-backup_dir="${HOME}/dotfiles/backups/${current_date}"
+backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/${current_date}"
 
 mkdir -p "${backup_dir}"
 echo "Backup dir created /dotfile/backups"
