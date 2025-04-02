@@ -1,3 +1,4 @@
+
 # Set PATHS
 ## Brew
 if [ -x "/opt/homebrew/bin/brew" ]; then
@@ -16,7 +17,7 @@ export PATH=$PATH:$ANDROID_HOME/emulator
 
 
 
-# Brew Completions
+## Brew Completions
 if type brew &>/dev/null
 then
   FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
@@ -25,7 +26,17 @@ then
   compinit
 fi
 
-# Node Version Manager
+## Node Version Manager
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+## Docker
+export PATH="$HOME/.docker/bin:$PATH" # custom docker installation
+
+### Add custom Docker completion directory to fpath
+if [[ -d ~/.docker/completions ]]; then
+  fpath=(~/.docker/completions $fpath)
+  autoload -Uz compinit
+  compinit
+fi
