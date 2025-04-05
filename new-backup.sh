@@ -1,60 +1,87 @@
 #!/usr/bin/env bash
+#
+# new-backup.sh - Backup system configurations and installed applications
+# This script creates backups of installed applications and configurations on macOS and Linux systems.
 
-current_date=$(date +%Y-%m-%d)
-backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/${current_date}"
-apps_backup_file="apps.txt"
-bin_backup_file="bin.txt"
-opt_backup_file="opt.txt"
-brew_backup_file="brew.txt"
-apt_backup_file="apt.txt"
-adguard_backup_dir="adguard"
+# Constants
+readonly BACKUP_DATE=$(date +%Y-%m-%d)
+readonly BACKUP_DIR="${HOME}/dotfiles/backups/${LOGNAME}/${BACKUP_DATE}"
+readonly APPS_FILE="apps.txt"
+readonly BIN_FILE="bin.txt"
+readonly OPT_FILE="opt.txt"
+readonly BREW_FILE="brew.txt"
+readonly APT_FILE="apt.txt"
+readonly ADGUARD_DIR="adguard"
 
-mkdir -p "${backup_dir}"
-echo "Backup dir created in /dotfile/backups"
+# Create backup directory
+mkdir -p "${BACKUP_DIR}"
+echo "Backup dir created in ${BACKUP_DIR}"
+
+# Function to backup directory listings
+backup_directory_listing() {
+  local dir="$1"
+  local output_file="$2"
+
+  if [[ -d "$dir" ]]; then
+    ls "$dir" > "$output_file"
+  fi
+}
+
+# Function to backup file with optional sudo
+backup_file() {
+  local src="$1"
+  local dest_dir="$2"
+  local needs_sudo="${3:-false}"
+
+  if [[ "$needs_sudo" == "true" ]]; then
+    if sudo test -f "$src"; then
+      sudo cp "$src" "$dest_dir/"
+      sudo chown "$(whoami):$(id -gn)" "$dest_dir/$(basename "$src")"
+      echo "Backed up $src"
+    else
+      echo "Warning: $src not found, skipping"
+    fi
+  else
+    if [[ -f "$src" ]]; then
+      cp "$src" "$dest_dir/"
+      echo "Backed up $src"
+    fi
+  fi
+}
 
 # copy list of installed apps
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    # Running on macOS
-    ls /Applications | cat > "${backup_dir}"/"${apps_backup_file}"
-    ls /usr/local/bin | cat > "${backup_dir}"/"${bin_backup_file}"
-    ls /opt | cat > "${backup_dir}"/"${opt_backup_file}"
-    brew list --versions | cat > "${backup_dir}"/"${brew_backup_file}"
+  # Running on macOS
+  backup_directory_listing "/Applications" "${BACKUP_DIR}/${APPS_FILE}"
+  backup_directory_listing "/usr/local/bin" "${BACKUP_DIR}/${BIN_FILE}"
+  backup_directory_listing "/opt" "${BACKUP_DIR}/${OPT_FILE}"
 
-    echo "Backup successful"
+  if command -v brew &> /dev/null; then
+    brew list --versions > "${BACKUP_DIR}/${BREW_FILE}"
+  fi
+
+  echo "Backup successful"
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Running on Linux
-    ls /usr/bin | cat > "${backup_dir}"/"${bin_backup_file}"
-    ls /opt | cat > "${backup_dir}"/"${opt_backup_file}"
+  # Running on Linux
+  backup_directory_listing "/usr/bin" "${BACKUP_DIR}/${BIN_FILE}"
+  backup_directory_listing "/opt" "${BACKUP_DIR}/${OPT_FILE}"
 
-    # APT (Debian/Ubuntu)
-    if command -v apt &> /dev/null; then
-        dpkg --get-selections | cat > "${backup_dir}"/"${apt_backup_file}"
-        echo "APT packages backed up"
-    fi
+  # APT (Debian/Ubuntu)
+  if command -v apt &> /dev/null; then
+    dpkg --get-selections > "${BACKUP_DIR}/${APT_FILE}"
+    echo "APT packages backed up"
+  fi
 
-    # AdGuard backup (Linux)
-    mkdir -p "${backup_dir}/${adguard_backup_dir}"
+  # AdGuard backup (Linux)
+  mkdir -p "${BACKUP_DIR}/${ADGUARD_DIR}"
 
-    # Check for AdGuard Home installation in system directory
-    if sudo test -d "/opt/AdGuardHome"; then
-        echo "Found AdGuard Home installation, backing up configuration..."
+  # Check for AdGuard Home installation and backup in one step
+  if sudo test -d "/opt/AdGuardHome" && sudo test -f "/opt/AdGuardHome/AdGuardHome.yaml"; then
+    echo "Found AdGuard Home installation, backing up configuration..."
+    backup_file "/opt/AdGuardHome/AdGuardHome.yaml" "${BACKUP_DIR}/${ADGUARD_DIR}" "true"
+  fi
 
-        # Backup only AdGuardHome.yaml configuration file with sudo
-        if sudo test -f "/opt/AdGuardHome/AdGuardHome.yaml"; then
-            # Copy just the yaml file
-            sudo cp "/opt/AdGuardHome/AdGuardHome.yaml" "${backup_dir}/${adguard_backup_dir}/"
-
-            # Fix ownership
-            sudo chown "$(whoami):$(id -gn)" "${backup_dir}/${adguard_backup_dir}/AdGuardHome.yaml"
-            echo "AdGuardHome.yaml configuration backed up"
-        else
-            echo "Warning: AdGuardHome.yaml not found, skipping configuration backup"
-        fi
-    fi
-
-    echo "Linux backup successful"
+  echo "Linux backup successful"
 else
-    echo "Unsupported operating system: $OSTYPE"
+  echo "Unsupported operating system: $OSTYPE"
 fi
-
-# TODO add pihole
