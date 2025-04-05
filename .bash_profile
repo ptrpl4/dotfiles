@@ -5,8 +5,7 @@ fi
 
 # Set PATHS
 ## Brew
-if command -v brew &>/dev/null; then
-    # For Apple Silicon Macs
+if [ -x "/opt/homebrew/bin/brew" ]; then
     export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
 fi
 
