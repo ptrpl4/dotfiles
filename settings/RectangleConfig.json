@@ -164,7 +164,7 @@
       "bool" : false
     },
     "selectedCycleSizes" : {
-      "int" : 31
+      "int" : 27
     },
     "shortEdgeSnapAreaSize" : {
       "float" : 145
@@ -334,5 +334,5 @@
       "modifierFlags" : 786432
     }
   },
-  "version" : "92"
+  "version" : "93"
 }
