@@ -1,0 +1,172 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette
+{
+  "git_panel": {
+    "button": true,
+    "dock": "left",
+    "default_width": 360,
+    "status_style": "icon",
+    "fallback_branch_name": "main",
+    "sort_by_path": false,
+    "collapse_untracked_diff": false,
+    "scrollbar": {
+      "show": null
+    }
+  },
+  "collaboration_panel": {
+    "button": false,
+    "dock": "left",
+    "default_width": 240
+  },
+  "project_panel": {
+    "button": true,
+    "default_width": 360,
+    "dock": "left",
+    "entry_spacing": "comfortable",
+    "file_icons": false,
+    "folder_icons": true,
+    "git_status": true,
+    "indent_size": 14,
+    "auto_reveal_entries": true,
+    "auto_fold_dirs": true,
+    "drag_and_drop": true,
+    "scrollbar": {
+      "show": null
+    },
+    "sticky_scroll": true,
+    "show_diagnostics": "all",
+    "indent_guides": {
+      "show": "always"
+    },
+    "hide_root": true,
+    "starts_open": true
+  },
+  "title_bar": {
+    "show_branch_icon": true,
+    "show_branch_name": true,
+    "show_project_items": true,
+    "show_onboarding_banner": false,
+    "show_user_picture": false,
+    "show_sign_in": true,
+    "show_menus": true
+  },
+  "terminal": {
+    "alternate_scroll": "off",
+    "blinking": "terminal_controlled",
+    "copy_on_select": false,
+    "keep_selection_on_copy": true,
+    "dock": "bottom",
+    "default_width": 640,
+    "default_height": 320,
+    "detect_venv": {
+      "on": {
+        "directories": [".env", "env", ".venv", "venv"],
+        "activate_script": "default"
+      }
+    },
+    "env": {},
+    "font_family": null,
+    "font_features": null,
+    "font_size": null,
+    "line_height": "comfortable",
+    "minimum_contrast": 45,
+    "option_as_meta": false,
+    "button": true,
+    "shell": "system",
+    "toolbar": {
+      "breadcrumbs": false
+    },
+    "working_directory": "current_project_directory",
+    "scrollbar": {
+      "show": null
+    }
+  },
+  "icon_theme": {
+    "mode": "system",
+    "dark": "Zed (Default)",
+    "light": "Zed (Default)"
+  },
+  "git": {
+    "git_gutter": "tracked_files",
+    "inline_blame": {
+      "enabled": true
+    },
+    "branch_picker": {
+      "show_author_name": true
+    },
+    "hunk_style": "staged_hollow"
+  },
+  "status_bar": {
+    "active_language_button": true,
+    "cursor_position_button": false
+  },
+  "tabs": {
+    "close_position": "right",
+    "file_icons": false,
+    "git_status": true,
+    "activate_on_close": "history",
+    "show_close_button": "always",
+    "show_diagnostics": "off"
+  },
+  "toolbar": {
+    "breadcrumbs": true,
+    "quick_actions": false,
+    "selections_menu": true,
+    "agent_review": true,
+    "code_actions": true
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "show_edit_predictions": true,
+  "features": {
+    "edit_prediction_provider": "zed"
+  },
+  "auto_update": false,
+  "autosave": "on_focus_change",
+  "outline_panel": {
+    "button": true,
+    "default_width": 300,
+    "dock": "right",
+    "file_icons": true,
+    "folder_icons": true,
+    "git_status": true,
+    "indent_size": 14,
+    "auto_reveal_entries": true,
+    "auto_fold_dirs": true,
+    "indent_guides": {
+      "show": "always"
+    },
+    "scrollbar": {
+      "show": null
+    }
+  },
+  "ensure_final_newline_on_save": true,
+  "remove_trailing_whitespace_on_save": true,
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "theme": {
+    "mode": "dark",
+    "light": "One Light",
+    "dark": "Ayu Mirage"
+  },
+  "ui_font_family": "Fira Code",
+  "buffer_font_family": "Fira Code",
+  "languages": {
+    "Markdown": {
+      "show_edit_predictions": false,
+      "remove_trailing_whitespace_on_save": false,
+      "soft_wrap": "bounded"
+    },
+    "TOML": {
+      "format_on_save": "off"
+    }
+  }
+}
