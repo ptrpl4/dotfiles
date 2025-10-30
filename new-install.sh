@@ -8,7 +8,6 @@ backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/${current_date}"
 mkdir -p "${backup_dir}"
 echo "Backup dir created /dotfile/backups"
 
-
 # List of files/folders to symlink in ${HOME}
 files=(zshrc zprompt zprofile bashrc bash_prompt bash_profile aliases private gitconfig)
 
@@ -31,6 +30,10 @@ for file in "${files[@]}"; do
     # Create the symlink
     ln -sf "${dotfile_dir}/.${file}" "${HOME}/.${file}"
 done
+
+# apply settings
+mkdir -p ~/Library/Application\ Support/Rectangle && cp settings/RectangleConfig.json ~/Library/Application\ Support/Rectangle/RectangleConfig.json
+
 
 # Purpose of configuration files
 ## zshrc uses zprompt, aliases, private

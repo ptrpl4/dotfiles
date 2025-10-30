@@ -1,8 +1,10 @@
 # Readme
-This repo contains config files and various settings for my main computer (macOS).  
-It is based on https://github.com/mathiasbynens/dotfiles and https://github.com/CoreyMSchafer/dotfiles
+
+This repo contains config files and various settings for my main computer (macOS).
+Based on [mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles) and [CoreyMSchafer/dotfiles](https://github.com/CoreyMSchafer/dotfiles)
 
 ## Setup
+
 ```bash
 # copy repo to $HOME folder
 git clone git@github.com:ptrpl4/dotfiles.git ~/dotfiles ; cd ~/dotfiles
@@ -13,8 +15,11 @@ touch .private
 ```
 
 ### Setup Troubleshoting
-Check `~/dotfiles/backups` in case of any unexpected issues - it will contain all previous versions of changed files
 
-## Applying settings
-1. Terminal
-2. Rectangle
+- Check `~/dotfiles/backups` in case of any unexpected issues - it will contain all previous versions of changed files
+- Installation expects nvm and Docker on local machine
+
+## Settings Autoapply
+
+1. Terminal (needs relaunch)
+2. Rectangle (needs relaunch)
