@@ -30,6 +30,9 @@ export BASH_SILENCE_DEPRECATION_WARNING=1
 ## Docker
 export PATH=$PATH:$HOME/.docker/bin
 
+## VSCode
+export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+
 ### Add custom Docker completion for bash
 if [ -d ~/.docker/completions ]; then
   for completion_file in ~/.docker/completions/*; do

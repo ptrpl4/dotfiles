@@ -38,6 +38,9 @@ else
   echo "Warning: Docker completions directory not found at ~/.docker/completions"
 fi
 
+## VSCode
+export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+
 ## Initialize completion system
 autoload -Uz compinit
 compinit 
