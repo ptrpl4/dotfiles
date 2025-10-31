@@ -6,6 +6,7 @@ current_date=$(date +%Y-%m-%d)
 backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/${current_date}"
 
 mkdir -p "${backup_dir}"
+mkdir -p "${backup_dir}/obsidian"
 echo "Backup dir created /dotfile/backups"
 
 # List of files/folders to symlink in ${HOME}
@@ -31,8 +32,25 @@ for file in "${files[@]}"; do
     ln -sf "${dotfile_dir}/.${file}" "${HOME}/.${file}"
 done
 
-# apply settings
+# apply Rectanlnge settings
 mkdir -p ~/Library/Application\ Support/Rectangle && cp settings/RectangleConfig.json ~/Library/Application\ Support/Rectangle/RectangleConfig.json
+
+# link Zed settings
+mkdir -p "${backup_dir}/.config/zed" && \
+cp "${HOME}/.config/zed/settings.json" "${backup_dir}/.config/zed" && \
+ln -sf "${HOME}/dotfiles/settings/zed/settings.json" "${HOME}/.config/zed/settings.json"
+
+# prototype for obsidian
+# mkdir -p "${backup_dir}/.obsidian" && \
+# cp "${HOME}/${obsidian_project_dir}/.obsidian" "${backup_dir}/${obsidian_project_dir}/.obsidian" && \
+# ln -sf "${HOME}/dotfiles/settings/obsidian/project/.obsidian" "${HOME}/.obsidian"
+
+# woraround for obsidian
+# cd to vault dir
+# make project dir and symlink
+# mkdir -p "${HOME}/dotfiles/backups/obsidian/$(basename "$PWD")/.obsidian" \
+# && mv ".obsidian" "${HOME}/dotfiles/backups/obsidian/$(basename "$PWD")/" \
+# && ln -sf "${HOME}/dotfiles/settings/obsidian/$(basename "$PWD")/.obsidian" "./.obsidian"
 
 
 # Purpose of configuration files
