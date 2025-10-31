@@ -1,4 +1,7 @@
 {
+  "edit_predictions": {
+    "mode": "subtle"
+  },
   "notification_panel": {
     "button": false
   },
