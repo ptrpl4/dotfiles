@@ -36,6 +36,8 @@ export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/b
 ### Add custom Docker completion for bash
 if [ -d ~/.docker/completions ]; then
   for completion_file in ~/.docker/completions/*; do
+    # Skip Zsh completion files (those starting with _)
+    [[ "$(basename "$completion_file")" == _* ]] && continue
     if [ -f "$completion_file" ]; then
       source "$completion_file"
     fi

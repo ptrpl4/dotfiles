@@ -1,59 +1,138 @@
-# Define the prompt_git function for git repository status
-prompt_git() {
-    local git_status=''
-    local branchName=''
-
-    # Check if the current directory is in a Git repository.
-    if git rev-parse --is-inside-work-tree &>/dev/null; then
-        # Get the status summary.
-        local gitSummary=$(git status --porcelain)
-
-        # Check for uncommitted changes in the index, unstaged changes, untracked files, and stashed files.
-        [[ -n $(echo "$gitSummary" | grep -E '^(M| M|\?\?)') ]] && git_status+='+'
-        git rev-parse --verify refs/stash &>/dev/null && git_status+='$'
-
-        # Get the short symbolic ref or the short SHA for the latest commit.
-        branchName=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo '(unknown)')
-
-        [ -n "${git_status}" ] && git_status=" [${git_status}]"
-
-        printf "%b on %b%s%s" "${white}" "${blue}" "${branchName}" "${git_status}"
-    else
-        return
-    fi
-}
-
-export VIRTUAL_ENV_DISABLE_PROMPT=1
-prompt_venv() {
-    if [[ -n "$VIRTUAL_ENV" ]]; then
-        # Extract the last directory name in the $VIRTUAL_ENV path
-        local venv_name=$(basename "$VIRTUAL_ENV")
-        printf "\n%b(%s)\n" "${steel_blue}" "${venv_name}"
-    fi
-}
-
-# Using tput for colors and formatting.
-tput sgr0 # reset colors
+# Terminal formatting and colors
+tput sgr0 # reset
 bold=$(tput bold)
+dim=$(tput dim)
 reset=$(tput sgr0)
-blue=$(tput setaf 153)
-steel_blue=$(tput setaf 67)
-green=$(tput setaf 71)
-orange=$(tput setaf 166)
-red=$(tput setaf 167)
-white=$(tput setaf 15)
-yellow=$(tput setaf 228)
 
-# Highlight the user name when logged in as root.
-if [[ "${USER}" == "root" ]]; then
-    userStyle="${red}"
-else
-    userStyle="${orange}"
+# ANSI base colors (0-7) - auto-adapt to terminal theme
+# Two colors: default terminal color for text, gray for separators
+gray=$(tput setaf 8)
+reset=$(tput sgr0)
+
+# Current time display
+prompt_time() {
+    local time_str=$(date +"%H${gray}:%${reset}%M")
+    printf "%b─[%b%s%b]" "${gray}" "${reset}" "${time_str}" "${gray}"
+}
+
+
+
+# Box drawing style git prompt with colors (optimized)
+prompt_git_box() {
+    # Quick check if in git repo (single call)
+    git rev-parse --is-inside-work-tree &>/dev/null || return
+
+    local git_status=''
+    local branchName=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo '(unknown)')
+
+    # Convert to lowercase using shell parameter expansion (faster than tr)
+    if [ -n "$ZSH_VERSION" ]; then
+        branchName=${branchName:l}
+    else
+        branchName=${branchName,,}
+    fi
+
+    # Check ahead/behind remote (combine into single git call)
+    local upstream=$(git rev-parse --abbrev-ref @{upstream} 2>/dev/null)
+    if [[ -n "$upstream" ]]; then
+        # Use read instead of awk to parse (faster, no subprocess)
+        local ahead_behind=$(git rev-list --left-right --count HEAD...@{upstream} 2>/dev/null)
+        local ahead=${ahead_behind%%[[:space:]]*}
+        local behind=${ahead_behind##*[[:space:]]}
+
+        [[ "$behind" -gt 0 ]] && git_status+="↓${behind}"
+        [[ "$ahead" -gt 0 ]] && git_status+="↑${ahead}"
+
+        # Show up-to-date indicator if in sync with remote
+        if [[ "$ahead" -eq 0 ]] && [[ "$behind" -eq 0 ]]; then
+            git_status+="✓"
+        fi
+    fi
+
+    [ -n "${git_status}" ] && git_status="${gray}:${reset}${git_status}"
+
+    printf "%b─[%bgit%b:%b%s%s%b]" "${gray}" "${reset}" "${gray}" "${reset}" "${branchName}" "${git_status}" "${gray}"
+}
+
+# Command execution time
+# Zsh preexec hook
+preexec() {
+    timer=$(($(date +%s%N)/1000000))
+}
+
+# Improved Bash preexec support
+if [ -n "$BASH_VERSION" ]; then
+    __prompt_command() {
+        local exit_code=$?
+        # Save exit code for prompt
+        LAST_EXIT_CODE=$exit_code
+        # Clear the preexec flag
+        __preexec_invoked=
+        return $exit_code
+    }
+
+    __debug_trap() {
+        # Skip if already invoked for this command
+        [ -n "$__preexec_invoked" ] && return
+
+        # Skip if BASH_COMMAND is empty or just whitespace
+        [[ -z "${BASH_COMMAND// }" ]] && return
+
+        # Filter out internal commands that shouldn't be timed
+        case "$BASH_COMMAND" in
+            __prompt_command*|__debug_trap*|'return '*) return ;;
+            *'PROMPT_COMMAND'*) return ;;
+        esac
+
+        # Start timer for user command
+        timer=$(($(date +%s%N)/1000000))
+        __preexec_invoked=1
+    }
+
+    trap '__debug_trap' DEBUG
+    PROMPT_COMMAND='__prompt_command'
 fi
 
-# Highlight the hostname when connected via SSH.
-if [[ "${SSH_TTY}" ]]; then
-    hostStyle="${bold}${red}"
-else
-    hostStyle="${yellow}"
+# Zsh precmd hook for exit code
+if [ -n "$ZSH_VERSION" ]; then
+    precmd() {
+        local exit_code=$?
+        # Save exit code for prompt
+        LAST_EXIT_CODE=$exit_code
+        return $exit_code
+    }
 fi
+
+prompt_exec_time_box() {
+    if [ -n "$timer" ]; then
+        local now=$(($(date +%s%N)/1000000))
+        local elapsed=$(($now-$timer))
+        if [ $elapsed -gt 1000 ]; then
+            local elapsed_sec=$(($elapsed/1000))
+            printf "%b─[%b${elapsed_sec}s%b]" "${gray}" "${reset}" "${gray}"
+        fi
+        unset timer
+    fi
+}
+
+# Exit status indicator
+prompt_exit_status() {
+    if [[ -n "$LAST_EXIT_CODE" ]] && [[ "$LAST_EXIT_CODE" -ne 0 ]]; then
+        printf "%b─[%berr %d%b]" "${gray}" "${reset}" "$LAST_EXIT_CODE" "${gray}"
+    fi
+}
+
+# Background jobs indicator (optimized)
+prompt_jobs_box() {
+    # Use shell builtin instead of subprocess
+    local job_count=$(jobs -p 2>/dev/null | wc -l)
+    # Remove whitespace using parameter expansion instead of tr
+    job_count=${job_count// /}
+    if [[ $job_count -gt 0 ]]; then
+        printf "%b─[%bjobs %d%b]" "${gray}" "${reset}" "${job_count}" "${gray}"
+    fi
+}
+
+# All text uses default terminal color
+userStyle="${reset}"
+hostStyle="${reset}"

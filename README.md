@@ -23,3 +23,10 @@ touch .private
 
 1. Terminal (needs relaunch)
 2. Rectangle (needs relaunch)
+
+## Prompt
+
+**Features:**
+- Git branch with sync status (✓ synced, ↑ ahead, ↓ behind)
+- Command execution time (if > 1s)
+- Auto-adaptive colors (switches with terminal theme)
