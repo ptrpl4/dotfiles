@@ -63,6 +63,5 @@ if [[ -n $PROFILE_STARTUP ]]; then
 fi
 # The following lines have been added by Docker Desktop to enable Docker CLI completions.
 fpath=(/Users/xsolla.user/.docker/completions $fpath)
-autoload -Uz compinit
-compinit
+# Note: compinit is called in .zprofile (loaded first)
 # End of Docker CLI completions

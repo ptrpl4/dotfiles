@@ -15,18 +15,45 @@ if command -v brew &>/dev/null; then
   FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 fi
 
-## Node Version Manager
+## Node Version Manager (lazy loaded for performance)
 export NVM_DIR="$HOME/nvm"
-if [ -s "$NVM_DIR/nvm.sh" ]; then
-  . "$NVM_DIR/nvm.sh"  # This loads nvm
-else
-  echo "Warning: NVM script not found at $NVM_DIR/nvm.sh"
-fi
-if [ -s "$NVM_DIR/bash_completion" ]; then
-  . "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-else
-  echo "Warning: NVM bash completion not found at $NVM_DIR/bash_completion"
-fi
+
+# Lazy load NVM - only load when node/npm/nvm is actually used
+nvm() {
+  unset -f nvm node npm npx
+  if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+  fi
+  nvm "$@"
+}
+
+node() {
+  unset -f nvm node npm npx
+  if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+  fi
+  node "$@"
+}
+
+npm() {
+  unset -f nvm node npm npx
+  if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+  fi
+  npm "$@"
+}
+
+npx() {
+  unset -f nvm node npm npx
+  if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+  fi
+  npx "$@"
+}
 
 ## Docker
 export PATH="$HOME/.docker/bin:$PATH" # custom docker installation
@@ -41,6 +68,11 @@ fi
 ## VSCode
 export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 
-## Initialize completion system
+## Initialize completion system (optimized with cache)
 autoload -Uz compinit
-compinit 
+# Only rebuild completion cache once a day
+if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qNmh-24) ]]; then
+  compinit -C  # Skip security check, use cached
+else
+  compinit     # Rebuild cache
+fi
