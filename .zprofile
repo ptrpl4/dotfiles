@@ -56,13 +56,15 @@ npx() {
 }
 
 ## Docker
-export PATH="$HOME/.docker/bin:$PATH" # custom docker installation
+if [[ -d /Applications/Docker.app ]] || [[ -d ~/.docker/bin ]] || [[ -f /usr/local/bin/docker ]]; then
+  export PATH="$HOME/.docker/bin:$PATH" # custom docker installation
 
-### Add custom Docker completion directory to fpath
-if [[ -d ~/.docker/completions ]]; then
-  fpath=(~/.docker/completions $fpath)
-else
-  echo "Warning: Docker completions directory not found at ~/.docker/completions"
+  ### Add custom Docker completion directory to fpath
+  if [[ -d ~/.docker/completions ]]; then
+    fpath=(~/.docker/completions $fpath)
+  else
+    echo "Warning: Docker completions directory not found at ~/.docker/completions"
+  fi
 fi
 
 ## VSCode
