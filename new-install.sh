@@ -40,6 +40,21 @@ mkdir -p "${backup_dir}/.config/zed" && \
 cp "${HOME}/.config/zed/settings.json" "${backup_dir}/.config/zed" && \
 ln -sf "${HOME}/dotfiles/settings/zed/settings.json" "${HOME}/.config/zed/settings.json"
 
+# Apply sysstem settings
+
+# !todo-macos-check
+
+# fix dock
+defaults write com.apple.dock "autohide-delay" -float "0"
+defaults write com.apple.dock "static-only" -bool "true"
+killall Dock
+
+# disable display dimming
+sudo pmset -a lessbright 0
+# rollback
+# sudo pmset -b lessbright 1
+# or settings/battery/options
+
 # prototype for obsidian
 # mkdir -p "${backup_dir}/.obsidian" && \
 # cp "${HOME}/${obsidian_project_dir}/.obsidian" "${backup_dir}/${obsidian_project_dir}/.obsidian" && \
