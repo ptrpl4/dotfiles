@@ -52,6 +52,8 @@ ln -sf "${HOME}/dotfiles/settings/zed/settings.json" "${HOME}/.config/zed/settin
 # && mv ".obsidian" "${HOME}/dotfiles/backups/obsidian/$(basename "$PWD")/" \
 # && ln -sf "${HOME}/dotfiles/settings/obsidian/$(basename "$PWD")/.obsidian" "./.obsidian"
 
+# maybe add ${HOME}/.config to backup?
+
 
 # Purpose of configuration files
 ## zshrc uses zprompt, aliases, private

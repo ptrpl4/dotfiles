@@ -25,11 +25,11 @@ prompt_git_box() {
     local git_status=''
     local branchName=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo '(unknown)')
 
-    # Convert to lowercase using shell parameter expansion (faster than tr)
+    # Convert to lowercase (compatible with bash 3.2+)
     if [ -n "$ZSH_VERSION" ]; then
         branchName=${branchName:l}
     else
-        branchName=${branchName,,}
+        branchName=$(echo "$branchName" | tr '[:upper:]' '[:lower:]')
     fi
 
     # Check ahead/behind remote (combine into single git call)
