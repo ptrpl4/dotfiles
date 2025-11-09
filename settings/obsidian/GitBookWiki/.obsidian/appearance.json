@@ -4,5 +4,6 @@
   "interfaceFontFamily": "Fira Code",
   "showViewHeader": true,
   "cssTheme": "Cupertino",
-  "showRibbon": false
+  "showRibbon": false,
+  "baseFontSizeAction": true
 }
