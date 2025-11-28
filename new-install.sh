@@ -7,7 +7,7 @@ backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/${current_date}"
 
 mkdir -p "${backup_dir}"
 mkdir -p "${backup_dir}/obsidian"
-echo "Backup dir created /dotfile/backups"
+echo "Backup dir created"
 
 # List of files/folders to symlink in ${HOME}
 files=(zshrc zprompt zprofile bashrc bash_prompt bash_profile aliases private gitconfig)
@@ -22,7 +22,7 @@ cd "${dotfile_dir}" || exit
 for file in "${files[@]}"; do
     # Check if the file already exists in the home directory
     if [ -e "${HOME}/.${file}" ]; then
-        echo "Backing up $file to ${backup_dir}"
+        echo "Backing up $file"
         # Backup the file to the backup directory
         cp "${HOME}/.${file}" "${backup_dir}/"
     fi
@@ -36,9 +36,22 @@ done
 mkdir -p ~/Library/Application\ Support/Rectangle && cp settings/RectangleConfig.json ~/Library/Application\ Support/Rectangle/RectangleConfig.json
 
 # link Zed settings
-mkdir -p "${backup_dir}/.config/zed" && \
-cp "${HOME}/.config/zed/settings.json" "${backup_dir}/.config/zed" && \
-ln -sf "${HOME}/dotfiles/settings/zed/settings.json" "${HOME}/.config/zed/settings.json"
+if command -v zed >/dev/null 2>&1; then
+  echo "Zed detected. Proceeding with settings handling."
+
+  if [ -f "${HOME}/.config/zed/settings.json" ]; then
+    echo "Backing up Zed settings"
+    mkdir -p "${backup_dir}/.config/zed" && \
+    cp "${HOME}/.config/zed/settings.json" "${backup_dir}/.config/zed/"
+  else
+    echo "No Zed settings.json found; skipping backup."
+  fi
+
+  ln -sf "${HOME}/dotfiles/settings/zed/settings.json" "${HOME}/.config/zed/settings.json" && \
+  echo "Zed symlink created"
+else
+  echo "Zed is not installed. Skipping Zed settings backup and symlink."
+fi
 
 # Apply sysstem settings
 
@@ -47,7 +60,12 @@ ln -sf "${HOME}/dotfiles/settings/zed/settings.json" "${HOME}/.config/zed/settin
 # fix dock
 defaults write com.apple.dock "autohide-delay" -float "0"
 defaults write com.apple.dock "static-only" -bool "true"
+defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock launchanim -bool false
 killall Dock
+
+# defaults write com.apple.trackpad tapBehavior -int 1 not working ??
+# add capslock
 
 # disable display dimming
 sudo pmset -a lessbright 0
