@@ -53,6 +53,20 @@ else
   echo "Zed is not installed. Skipping Zed settings backup and symlink."
 fi
 
+# link other Run Commands
+
+if [ -f "${HOME}/dotfiles/.netrc" ]; then
+  ln -s ~/dotfiles/.netrc ~/.netrc
+else
+  echo "~/dotfiles/.netrc does not exist, skipping symlink."
+fi
+
+if [ -f "${HOME}/dotfiles/.npmrc" ]; then
+  ln -s ~/dotfiles/.npmrc ~/.npmrc
+else
+  echo "~/dotfiles/.npmrc does not exist, skipping symlink."
+fi
+
 # Apply sysstem settings
 
 # !todo-macos-check
@@ -64,21 +78,15 @@ defaults write com.apple.dock autohide -bool true
 defaults write com.apple.dock launchanim -bool false
 killall Dock
 
-# defaults write com.apple.trackpad tapBehavior -int 1 not working ??
-# add capslock
-
 # disable display dimming
-sudo pmset -a lessbright 0
-# rollback
-# sudo pmset -b lessbright 1
-# or settings/battery/options
+sudo pmset -a lessbright 0 # rollback - sudo pmset -b lessbright 1
 
 # prototype for obsidian
 # mkdir -p "${backup_dir}/.obsidian" && \
 # cp "${HOME}/${obsidian_project_dir}/.obsidian" "${backup_dir}/${obsidian_project_dir}/.obsidian" && \
 # ln -sf "${HOME}/dotfiles/settings/obsidian/project/.obsidian" "${HOME}/.obsidian"
 
-# woraround for obsidian
+# workaround for obsidian
 # cd to vault dir
 # make project dir and symlink
 # mkdir -p "${HOME}/dotfiles/backups/obsidian/$(basename "$PWD")/.obsidian" \
@@ -86,16 +94,3 @@ sudo pmset -a lessbright 0
 # && ln -sf "${HOME}/dotfiles/settings/obsidian/$(basename "$PWD")/.obsidian" "./.obsidian"
 
 # maybe add ${HOME}/.config to backup?
-
-
-# Purpose of configuration files
-## zshrc uses zprompt, aliases, private
-## zprompt uses shared_prompt
-## bashrc uses bash_prompt, aliases, private
-### zprompt
-#### shared_prompt
-### aliases
-### private
-
-###
-# todo make aliases private => shared_
