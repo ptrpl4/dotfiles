@@ -43,3 +43,6 @@ if [ -d ~/.docker/completions ]; then
     fi
   done
 fi
+
+## golang
+export PATH="$PATH:$HOME/go/bin"

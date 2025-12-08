@@ -78,3 +78,6 @@ if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qNmh-24) ]]; then
 else
   compinit     # Rebuild cache
 fi
+
+## golang
+export PATH="$PATH:$HOME/go/bin"
