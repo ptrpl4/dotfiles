@@ -12,6 +12,8 @@ Thumbs.db
 
 # Private Information
 .private
+.netrc
+.npmrc
 
 # Ignore backups
 /backups
