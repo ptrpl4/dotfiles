@@ -18,7 +18,7 @@ touch .private
 ./new-install.sh
 ```
 
-### Setup Troubleshoting
+### Setup Troubleshooting
 
 - Check `~/dotfiles/backups` in case of any unexpected issues - it will contain all previous versions of changed files
 - Installation expects nvm and Docker on local machine

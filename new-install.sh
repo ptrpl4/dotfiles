@@ -74,9 +74,7 @@ else
   echo "~/dotfiles/.npmrc does not exist, skipping symlink."
 fi
 
-# Apply sysstem settings
-
-# !todo-macos-check
+# Apply system settings
 
 # fix dock
 defaults write com.apple.dock "autohide-delay" -float "0"

@@ -24,6 +24,9 @@ _load_nvm() {
   if [ -s "$NVM_DIR/nvm.sh" ]; then
     . "$NVM_DIR/nvm.sh"
     [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+  else
+    echo "Warning: nvm not found at $NVM_DIR/nvm.sh" >&2
+    return 1
   fi
 }
 
@@ -58,6 +61,12 @@ fi
 
 ## golang
 export PATH="$PATH:$HOME/go/bin"
+
+## Default editor
+if command -v zed &>/dev/null; then
+  export EDITOR="zed --wait"
+  export VISUAL="zed --wait"
+fi
 
 ## local binaries (pipx, poetry, etc.)
 export PATH="$HOME/.local/bin:$PATH"

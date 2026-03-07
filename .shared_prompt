@@ -1,11 +1,4 @@
 # Terminal formatting and colors
-tput sgr0 # reset
-bold=$(tput bold)
-dim=$(tput dim)
-reset=$(tput sgr0)
-
-# ANSI base colors (0-7) - auto-adapt to terminal theme
-# Two colors: default terminal color for text, gray for separators
 gray=$(tput setaf 8)
 reset=$(tput sgr0)
 
@@ -39,6 +32,8 @@ prompt_git_box() {
         local ahead_behind=$(git rev-list --left-right --count HEAD...@{upstream} 2>/dev/null)
         local ahead=${ahead_behind%%[[:space:]]*}
         local behind=${ahead_behind##*[[:space:]]}
+        ahead=${ahead:-0}
+        behind=${behind:-0}
 
         [[ "$behind" -gt 0 ]] && git_status+="↓${behind}"
         [[ "$ahead" -gt 0 ]] && git_status+="↑${ahead}"
@@ -133,6 +128,4 @@ prompt_jobs_box() {
     fi
 }
 
-# All text uses default terminal color
-userStyle="${reset}"
-hostStyle="${reset}"
+
