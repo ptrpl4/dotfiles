@@ -16,14 +16,25 @@ fi
 ## Android Studio
 export ANDROID_HOME=~/Library/Android/sdk
 export PATH=$PATH:$ANDROID_HOME/emulator
-# export PATH=$PATH:$ANDROID_HOME/tools
-# export PATH=$PATH:$ANDROID_HOME/tools/bin
-# export PATH=$PATH:$ANDROID_HOME/platform-tools
 
-## Node Version Manager
+## Node Version Manager (lazy loaded for performance)
 export NVM_DIR="$HOME/nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+_load_nvm() {
+  unset -f nvm node npm npx _load_nvm
+  if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+  else
+    echo "Warning: nvm not found at $NVM_DIR/nvm.sh" >&2
+    return 1
+  fi
+}
+
+nvm()  { _load_nvm; nvm "$@"; }
+node() { _load_nvm; node "$@"; }
+npm()  { _load_nvm; npm "$@"; }
+npx()  { _load_nvm; npx "$@"; }
 
 export BASH_SILENCE_DEPRECATION_WARNING=1
 
@@ -31,7 +42,9 @@ export BASH_SILENCE_DEPRECATION_WARNING=1
 export PATH=$PATH:$HOME/.docker/bin
 
 ## VSCode
-export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+if [ -d "/Applications/Visual Studio Code.app" ]; then
+  export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+fi
 
 ### Add custom Docker completion for bash
 if [ -d ~/.docker/completions ]; then

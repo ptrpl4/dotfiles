@@ -48,7 +48,9 @@ if [[ -d /Applications/Docker.app ]] || [[ -d ~/.docker/bin ]] || [[ -f /usr/loc
 fi
 
 ## VSCode
-export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+if [[ -d "/Applications/Visual Studio Code.app" ]]; then
+  export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+fi
 
 ## Initialize completion system (optimized with cache)
 autoload -Uz compinit

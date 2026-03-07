@@ -32,31 +32,6 @@ if [[ -o interactive ]]; then
   echo "${gray}└──[${reset}shell loaded in ${shell_load_time}ms${gray}]${reset}"
 fi
 
-# Commented out optimized version:
-# The version below uses lazy loading to improve startup time
-# To use this version, comment out the for loop above and uncomment this section
-#
-# load_file() {
-#   [ -r "$1" ] && [ -f "$1" ] && source "$1"
-# }
-#
-# # Core configuration - load immediately
-# load_file ~/.zprompt  # Prompt is needed right away
-#
-# # Lazy load functions - only when first used
-# lazy_load() {
-#   local cmd="$1"
-#   local file="$2"
-#
-#   eval "$cmd() { unfunction $cmd; load_file $file; $cmd \$@ }"
-# }
-#
-# # Load aliases and private settings only when the shell becomes interactive
-# if [[ -o interactive ]]; then
-#   load_file ~/.aliases
-#   load_file ~/.private
-# fi
-
 # End profiling if enabled
 if [[ -n $PROFILE_STARTUP ]]; then
   zprof
