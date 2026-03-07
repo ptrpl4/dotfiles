@@ -14,6 +14,7 @@ readonly APT_FILE="apt.txt"
 readonly ADGUARD_DIR="adguard"
 readonly CLAUDE_DIR="${HOME}/.claude"
 readonly CLAUDE_BACKUP_DIR="claude"
+readonly OBSIDIAN_BACKUP_DIR="obsidian"
 
 # Create backup directory
 mkdir -p "${BACKUP_DIR}"
@@ -79,6 +80,29 @@ backup_claude() {
   echo "Claude Code config backed up"
 }
 
+# Backup Obsidian vault settings
+backup_obsidian() {
+  local obsidian_config="${HOME}/Library/Application Support/obsidian/obsidian.json"
+  [[ -f "$obsidian_config" ]] || return
+
+  # Extract vault paths from Obsidian config
+  local vaults
+  vaults=$(grep -o '"path":"[^"]*"' "$obsidian_config" | cut -d'"' -f4)
+
+  for vault_path in $vaults; do
+    local vault_name
+    vault_name=$(basename "$vault_path")
+    local obsidian_dir="${vault_path}/.obsidian"
+
+    [[ -d "$obsidian_dir" ]] || continue
+
+    local dest="${BACKUP_DIR}/${OBSIDIAN_BACKUP_DIR}/${vault_name}"
+    mkdir -p "${dest}"
+    cp -R "$obsidian_dir" "${dest}/"
+    echo "Backed up Obsidian vault: ${vault_name}"
+  done
+}
+
 # copy list of installed apps
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Running on macOS
@@ -118,6 +142,9 @@ fi
 
 # Claude Code config (cross-platform)
 backup_claude
+
+# Obsidian vault settings
+backup_obsidian
 
 # SSH config (cross-platform)
 readonly SSH_BACKUP_DIR="ssh"
