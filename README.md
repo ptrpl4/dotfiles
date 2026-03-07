@@ -21,6 +21,16 @@ ZED_PROFILE="home"
 OBSIDIAN_VAULTS=("$HOME/path/to/vault1" "$HOME/path/to/vault2")
 ```
 
+### `.private-gitconfig` (optional)
+
+Override git identity per machine. Included by `.gitconfig` automatically.
+
+```ini
+[user]
+    name = Work Name
+    email = work@company.com
+```
+
 ### Troubleshooting
 
 - Check `~/dotfiles/backups` — previous versions of overwritten files are saved there

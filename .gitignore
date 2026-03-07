@@ -12,6 +12,7 @@ Thumbs.db
 
 # Private Information
 .private
+.private-gitconfig
 .netrc
 .npmrc
 
