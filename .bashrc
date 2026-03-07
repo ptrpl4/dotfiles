@@ -1,6 +1,12 @@
 # If not running interactively, exit script
 [[ $- != *i* ]] && return
 
+# History
+HISTSIZE=10000
+HISTFILESIZE=10000
+HISTCONTROL=ignoreboth  # skip dupes + space-prefixed
+shopt -s histappend     # append, don't overwrite
+
 # Load dotfiles:
 for file in ~/.{bash_prompt,aliases,private}; do
     [ -r "$file" ] && [ -f "$file" ] && source "$file";

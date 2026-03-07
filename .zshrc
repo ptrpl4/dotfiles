@@ -12,6 +12,20 @@ autoload -Uz colors && colors
 # Enable vars and commands within prompt
 setopt PROMPT_SUBST
 
+# History
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE=~/.zsh_history
+setopt INC_APPEND_HISTORY      # write to file immediately
+setopt HIST_IGNORE_DUPS        # skip consecutive dupes
+setopt HIST_IGNORE_SPACE       # leading space = not saved
+setopt HIST_EXPIRE_DUPS_FIRST  # drop dupes first when trimming
+setopt EXTENDED_HISTORY        # save timestamps
+
+# Shell behavior
+setopt CORRECT                 # suggest fix for typos
+setopt INTERACTIVE_COMMENTS    # allow # comments in terminal
+
 # Load dotfiles directly (traditional approach)
 # This is the original loading pattern, which loads files immediately
 for file in ~/.{zprompt,aliases,private}; do
