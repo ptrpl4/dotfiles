@@ -112,6 +112,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
   if command -v brew &> /dev/null; then
     brew list --versions > "${BACKUP_DIR}/${BREW_FILE}"
+    brew bundle dump --file="${BACKUP_DIR}/Brewfile" --force
   fi
 
   echo "Backup successful"
