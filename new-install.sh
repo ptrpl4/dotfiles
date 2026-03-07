@@ -56,13 +56,13 @@ fi
 # link other Run Commands
 
 if [ -f "${HOME}/dotfiles/.netrc" ]; then
-  ln -s ~/dotfiles/.netrc ~/.netrc
+  ln -sf ~/dotfiles/.netrc ~/.netrc
 else
   echo "~/dotfiles/.netrc does not exist, skipping symlink."
 fi
 
 if [ -f "${HOME}/dotfiles/.npmrc" ]; then
-  ln -s ~/dotfiles/.npmrc ~/.npmrc
+  ln -sf ~/dotfiles/.npmrc ~/.npmrc
 else
   echo "~/dotfiles/.npmrc does not exist, skipping symlink."
 fi
