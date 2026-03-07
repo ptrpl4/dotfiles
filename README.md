@@ -1,36 +1,33 @@
-# Readme
+# Dotfiles
 
-This repo contains config files and various settings for my main computer (macOS).
+Config files and settings for macOS (primary) and Linux.
 Based on [mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles) and [CoreyMSchafer/dotfiles](https://github.com/CoreyMSchafer/dotfiles)
 
 ## Setup
 
 ```bash
-# copy repo to $HOME folder
-git clone git@github.com:ptrpl4/dotfiles.git ~/dotfiles ; cd ~/dotfiles
-# create/copy .private file to use it along with publc config
-touch .private
-# (optional) set Zed profile: "work" or "home" (defaults to "home")
-# ZED_PROFILE="home"
-# (optional) add Obsidian vault paths to .private
-# OBSIDIAN_VAULTS=("$HOME/path/to/vault1" "$HOME/path/to/vault2")
-# run install script
-./new-install.sh
+git clone git@github.com:ptrpl4/dotfiles.git ~/dotfiles && cd ~/dotfiles
+touch .private   # machine-specific config, see below
+./install.sh
 ```
 
-### Setup Troubleshooting
+### `.private` variables
 
-- Check `~/dotfiles/backups` in case of any unexpected issues - it will contain all previous versions of changed files
-- Installation expects nvm and Docker on local machine
+```bash
+# Zed editor profile: "work" or "home" (defaults to "home")
+ZED_PROFILE="home"
 
-## Settings Autoapply
+# Obsidian vault paths for settings sync
+OBSIDIAN_VAULTS=("$HOME/path/to/vault1" "$HOME/path/to/vault2")
+```
 
-1. Terminal (needs relaunch)
-2. Rectangle (needs relaunch)
+### Troubleshooting
+
+- Check `~/dotfiles/backups` — previous versions of overwritten files are saved there
+- NVM and Docker are expected to be installed
 
 ## TODO
 
-- [ ] Guard macOS-specific commands in install script for Linux support (`defaults write`, `killall Dock`, Rectangle)
 - [ ] Add restore script (`brew bundle install`, etc.)
 
 ## Prompt

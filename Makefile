@@ -1,5 +1,5 @@
-BACKUP_SCRIPT = new-backup.sh
-INSTALL_SCRIPT = new-install.sh
+BACKUP_SCRIPT = backup.sh
+INSTALL_SCRIPT = install.sh
 
 .PHONY: backup install
 

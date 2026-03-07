@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# new-backup.sh - Backup system configurations and installed applications
+# backup.sh - Backup system configurations and installed applications
 # This script creates backups of installed applications and configurations on macOS and Linux systems.
 
 # Constants
