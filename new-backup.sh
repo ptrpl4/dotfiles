@@ -147,6 +147,32 @@ backup_claude
 # Obsidian vault settings
 backup_obsidian
 
+# macOS app settings
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  readonly APPS_BACKUP_DIR="${BACKUP_DIR}/app-settings"
+  mkdir -p "${APPS_BACKUP_DIR}"
+
+  # Sublime Text
+  local_st="${HOME}/Library/Application Support/Sublime Text/Packages/User"
+  if [[ -d "$local_st" ]]; then
+    mkdir -p "${APPS_BACKUP_DIR}/sublime-text"
+    cp -R "$local_st/" "${APPS_BACKUP_DIR}/sublime-text/"
+    echo "Sublime Text settings backed up"
+  fi
+
+  # Sublime Merge
+  local_sm="${HOME}/Library/Application Support/Sublime Merge/Packages/User"
+  if [[ -d "$local_sm" ]]; then
+    mkdir -p "${APPS_BACKUP_DIR}/sublime-merge"
+    cp -R "$local_sm/" "${APPS_BACKUP_DIR}/sublime-merge/"
+    echo "Sublime Merge settings backed up"
+  fi
+
+  # MonitorControl
+  backup_file "${HOME}/Library/Preferences/me.guillaumeb.MonitorControl.plist" "${APPS_BACKUP_DIR}"
+
+fi
+
 # SSH config (cross-platform)
 readonly SSH_BACKUP_DIR="ssh"
 if [[ -f "${HOME}/.ssh/config" ]]; then
