@@ -10,6 +10,8 @@ Based on [mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles) and
 git clone git@github.com:ptrpl4/dotfiles.git ~/dotfiles ; cd ~/dotfiles
 # create/copy .private file to use it along with publc config
 touch .private
+# (optional) add Obsidian vault paths to .private
+# OBSIDIAN_VAULTS=("$HOME/path/to/vault1" "$HOME/path/to/vault2")
 # run install script
 ./new-install.sh
 ```

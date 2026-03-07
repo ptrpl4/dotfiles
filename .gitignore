@@ -19,4 +19,4 @@ Thumbs.db
 /backups
 
 # obsidian
-**/.obsidian/workspace.json
+settings/obsidian/default/workspace.json

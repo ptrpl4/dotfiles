@@ -6,7 +6,6 @@ current_date=$(date +%Y-%m-%d)
 backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/${current_date}"
 
 mkdir -p "${backup_dir}"
-mkdir -p "${backup_dir}/obsidian"
 echo "Backup dir created"
 
 # List of files/folders to symlink in ${HOME}
@@ -81,16 +80,29 @@ killall Dock
 # disable display dimming
 sudo pmset -a lessbright 0 # rollback - sudo pmset -b lessbright 1
 
-# prototype for obsidian
-# mkdir -p "${backup_dir}/.obsidian" && \
-# cp "${HOME}/${obsidian_project_dir}/.obsidian" "${backup_dir}/${obsidian_project_dir}/.obsidian" && \
-# ln -sf "${HOME}/dotfiles/settings/obsidian/project/.obsidian" "${HOME}/.obsidian"
+# Source .private for machine-specific variables (e.g., OBSIDIAN_VAULTS)
+[[ -f "${dotfile_dir}/.private" ]] && source "${dotfile_dir}/.private"
 
-# workaround for obsidian
-# cd to vault dir
-# make project dir and symlink
-# mkdir -p "${HOME}/dotfiles/backups/obsidian/$(basename "$PWD")/.obsidian" \
-# && mv ".obsidian" "${HOME}/dotfiles/backups/obsidian/$(basename "$PWD")/" \
-# && ln -sf "${HOME}/dotfiles/settings/obsidian/$(basename "$PWD")/.obsidian" "./.obsidian"
+# link Obsidian settings (vault paths defined in .private)
+if [[ ${#OBSIDIAN_VAULTS[@]} -gt 0 ]]; then
+  for vault_path in "${OBSIDIAN_VAULTS[@]}"; do
+    if [[ -d "$vault_path" ]]; then
+      local_obsidian="${vault_path}/.obsidian"
 
-# maybe add ${HOME}/.config to backup?
+      # Backup existing config if it's not already a symlink
+      if [[ -d "$local_obsidian" && ! -L "$local_obsidian" ]]; then
+        echo "Backing up Obsidian config for $(basename "$vault_path")"
+        mkdir -p "${backup_dir}/obsidian/$(basename "$vault_path")"
+        cp -R "$local_obsidian" "${backup_dir}/obsidian/$(basename "$vault_path")/"
+        rm -rf "$local_obsidian"
+      fi
+
+      ln -sfn "${dotfile_dir}/settings/obsidian/default" "$local_obsidian"
+      echo "Obsidian symlink created for $(basename "$vault_path")"
+    else
+      echo "Obsidian vault not found: $vault_path, skipping"
+    fi
+  done
+else
+  echo "No OBSIDIAN_VAULTS defined in .private, skipping Obsidian setup"
+fi

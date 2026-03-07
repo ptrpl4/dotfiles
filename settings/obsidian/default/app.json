@@ -7,5 +7,6 @@
   "alwaysUpdateLinks": true,
   "showUnsupportedFiles": true,
   "readableLineLength": true,
-  "strictLineBreaks": true
+  "strictLineBreaks": true,
+  "focusNewTab": true
 }
