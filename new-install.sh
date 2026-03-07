@@ -76,14 +76,33 @@ fi
 
 # Apply system settings
 
-# fix dock
+# Dock
 defaults write com.apple.dock "autohide-delay" -float "0"
 defaults write com.apple.dock "static-only" -bool "true"
 defaults write com.apple.dock autohide -bool true
 defaults write com.apple.dock launchanim -bool false
+defaults write com.apple.dock show-recents -bool false
 killall Dock
 
-# disable display dimming
+# Finder
+defaults write com.apple.finder ShowPathbar -bool true
+defaults write com.apple.finder ShowStatusBar -bool true
+defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+killall Finder
+
+# Keyboard
+defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false
+
+# Trackpad — tap to click
+defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+
+# Screenshots
+mkdir -p "${HOME}/Screenshots"
+defaults write com.apple.screencapture location -string "${HOME}/Screenshots"
+
+# Display dimming
 sudo pmset -a lessbright 0 # rollback - sudo pmset -b lessbright 1
 
 # link Obsidian settings (vault paths defined in .private)
