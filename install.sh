@@ -37,7 +37,7 @@ done
 # macOS app settings
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Rectangle
-  mkdir -p ~/Library/Application\ Support/Rectangle && cp settings/RectangleConfig.json ~/Library/Application\ Support/Rectangle/RectangleConfig.json
+  mkdir -p ~/Library/Application\ Support/Rectangle && cp settings/rectangle/RectangleConfig.json ~/Library/Application\ Support/Rectangle/RectangleConfig.json
 fi
 
 # link Zed settings (profile defined in .private: "work" or "home")
