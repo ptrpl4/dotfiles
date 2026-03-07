@@ -19,41 +19,18 @@ fi
 export NVM_DIR="$HOME/nvm"
 
 # Lazy load NVM - only load when node/npm/nvm is actually used
-nvm() {
-  unset -f nvm node npm npx
+_load_nvm() {
+  unset -f nvm node npm npx _load_nvm
   if [ -s "$NVM_DIR/nvm.sh" ]; then
     . "$NVM_DIR/nvm.sh"
     [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
   fi
-  nvm "$@"
 }
 
-node() {
-  unset -f nvm node npm npx
-  if [ -s "$NVM_DIR/nvm.sh" ]; then
-    . "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
-  fi
-  node "$@"
-}
-
-npm() {
-  unset -f nvm node npm npx
-  if [ -s "$NVM_DIR/nvm.sh" ]; then
-    . "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
-  fi
-  npm "$@"
-}
-
-npx() {
-  unset -f nvm node npm npx
-  if [ -s "$NVM_DIR/nvm.sh" ]; then
-    . "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
-  fi
-  npx "$@"
-}
+nvm()  { _load_nvm; nvm "$@"; }
+node() { _load_nvm; node "$@"; }
+npm()  { _load_nvm; npm "$@"; }
+npx()  { _load_nvm; npx "$@"; }
 
 ## Docker
 if [[ -d /Applications/Docker.app ]] || [[ -d ~/.docker/bin ]] || [[ -f /usr/local/bin/docker ]]; then
@@ -81,3 +58,6 @@ fi
 
 ## golang
 export PATH="$PATH:$HOME/go/bin"
+
+## local binaries (pipx, poetry, etc.)
+export PATH="$HOME/.local/bin:$PATH"
