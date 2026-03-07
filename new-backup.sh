@@ -12,6 +12,8 @@ readonly OPT_FILE="opt.txt"
 readonly BREW_FILE="brew.txt"
 readonly APT_FILE="apt.txt"
 readonly ADGUARD_DIR="adguard"
+readonly CLAUDE_DIR="${HOME}/.claude"
+readonly CLAUDE_BACKUP_DIR="claude"
 
 # Create backup directory
 mkdir -p "${BACKUP_DIR}"
@@ -47,6 +49,34 @@ backup_file() {
       echo "Backed up $src"
     fi
   fi
+}
+
+# Backup Claude Code configuration
+backup_claude() {
+  if [[ ! -d "${CLAUDE_DIR}" ]]; then
+    echo "Claude Code not found, skipping"
+    return
+  fi
+
+  local dest="${BACKUP_DIR}/${CLAUDE_BACKUP_DIR}"
+  mkdir -p "${dest}"
+
+  # Global config files
+  for file in CLAUDE.md settings.json notes.md; do
+    backup_file "${CLAUDE_DIR}/${file}" "${dest}"
+  done
+
+  # Per-project memory files
+  for memory_file in "${CLAUDE_DIR}"/projects/*/memory/*.md; do
+    [[ -f "$memory_file" ]] || continue
+    # Extract project dir name from path
+    local project_dir
+    project_dir=$(echo "$memory_file" | sed "s|${CLAUDE_DIR}/projects/||" | cut -d'/' -f1)
+    mkdir -p "${dest}/projects/${project_dir}/memory"
+    cp "$memory_file" "${dest}/projects/${project_dir}/memory/"
+  done
+
+  echo "Claude Code config backed up"
 }
 
 # copy list of installed apps
@@ -85,3 +115,8 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
 else
   echo "Unsupported operating system: $OSTYPE"
 fi
+
+# Claude Code config (cross-platform)
+backup_claude
+
+# todo - add backup for .ssh/config ?
