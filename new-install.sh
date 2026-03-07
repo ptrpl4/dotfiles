@@ -31,10 +31,13 @@ for file in "${files[@]}"; do
     ln -sf "${dotfile_dir}/.${file}" "${HOME}/.${file}"
 done
 
+# Source .private for machine-specific variables (ZED_PROFILE, OBSIDIAN_VAULTS)
+[[ -f "${dotfile_dir}/.private" ]] && source "${dotfile_dir}/.private"
+
 # apply Rectanlnge settings
 mkdir -p ~/Library/Application\ Support/Rectangle && cp settings/RectangleConfig.json ~/Library/Application\ Support/Rectangle/RectangleConfig.json
 
-# link Zed settings
+# link Zed settings (profile defined in .private: "work" or "home")
 if command -v zed >/dev/null 2>&1; then
   echo "Zed detected. Proceeding with settings handling."
 
@@ -46,10 +49,15 @@ if command -v zed >/dev/null 2>&1; then
     echo "No Zed settings.json found; skipping backup."
   fi
 
-  ln -sf "${HOME}/dotfiles/settings/zed/settings.json" "${HOME}/.config/zed/settings.json" && \
-  echo "Zed symlink created"
+  zed_settings="${dotfile_dir}/settings/zed/settings-${ZED_PROFILE:-home}.json"
+  if [[ -f "$zed_settings" ]]; then
+    ln -sf "$zed_settings" "${HOME}/.config/zed/settings.json" && \
+    echo "Zed symlink created (profile: ${ZED_PROFILE:-home})"
+  else
+    echo "Zed profile not found: $zed_settings"
+  fi
 else
-  echo "Zed is not installed. Skipping Zed settings backup and symlink."
+  echo "Zed is not installed. Skipping Zed settings."
 fi
 
 # link other Run Commands
@@ -79,9 +87,6 @@ killall Dock
 
 # disable display dimming
 sudo pmset -a lessbright 0 # rollback - sudo pmset -b lessbright 1
-
-# Source .private for machine-specific variables (e.g., OBSIDIAN_VAULTS)
-[[ -f "${dotfile_dir}/.private" ]] && source "${dotfile_dir}/.private"
 
 # link Obsidian settings (vault paths defined in .private)
 if [[ ${#OBSIDIAN_VAULTS[@]} -gt 0 ]]; then
