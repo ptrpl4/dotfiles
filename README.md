@@ -28,6 +28,7 @@ OBSIDIAN_VAULTS=("$HOME/path/to/vault1" "$HOME/path/to/vault2")
 
 ## TODO
 
+- [ ] Add `make help` target
 - [ ] Add restore script (`brew bundle install`, etc.)
 
 ## Prompt
