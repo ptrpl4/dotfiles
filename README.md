@@ -28,6 +28,11 @@ touch .private
 1. Terminal (needs relaunch)
 2. Rectangle (needs relaunch)
 
+## TODO
+
+- [ ] Guard macOS-specific commands in install script for Linux support (`defaults write`, `killall Dock`, Rectangle)
+- [ ] Add restore script (`brew bundle install`, etc.)
+
 ## Prompt
 
 **Features:**
