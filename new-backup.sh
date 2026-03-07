@@ -119,4 +119,10 @@ fi
 # Claude Code config (cross-platform)
 backup_claude
 
-# todo - add backup for .ssh/config ?
+# SSH config (cross-platform)
+readonly SSH_BACKUP_DIR="ssh"
+if [[ -f "${HOME}/.ssh/config" ]]; then
+  mkdir -p "${BACKUP_DIR}/${SSH_BACKUP_DIR}"
+  cp "${HOME}/.ssh/config" "${BACKUP_DIR}/${SSH_BACKUP_DIR}/"
+  echo "SSH config backed up"
+fi
