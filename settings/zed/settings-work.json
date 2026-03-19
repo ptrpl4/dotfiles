@@ -3,12 +3,8 @@
   // EDITOR BEHAVIOR
   // ============================================================================
   "agent_servers": {
-    "claude": {
-      "favorite_models": [
-        "opus"
-      ],
-      "default_config_options": {},
-      "favorite_config_option_values": {}
+    "claude-acp": {
+      "type": "registry"
     }
   },
   "format_on_save": "off",
@@ -47,13 +43,19 @@
     "mode": "subtle"
   },
   "agent": {
+    "favorite_models": [
+      {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-6-thinking-latest",
+        "enable_thinking": false
+      }
+    ],
     "default_profile": "write",
     "default_model": {
+      "enable_thinking": true,
       "provider": "anthropic",
-      "model": "claude-sonnet-4-5-thinking-latest"
-    },
-    "enable_feedback": false,
-    "always_allow_tool_actions": false
+      "model": "claude-sonnet-4-6-thinking-latest"
+    }
   },
 
   // ============================================================================
@@ -223,11 +225,5 @@
       "soft_wrap": "bounded"
     }
   },
-  "lsp": {
-    "gopls": {
-      "initialization_options": {
-        "buildFlags": ["-tags=test"]
-      }
-    }
-  }
+  "lsp": {}
 }
