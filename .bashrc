@@ -26,8 +26,8 @@ export PATH=$PATH:$ANDROID_HOME/emulator
 ## Node Version Manager (lazy loaded for performance)
 export NVM_DIR="$HOME/nvm"
 
-_load_nvm() {
-  unset -f nvm node npm npx _load_nvm
+_nvm_load() {
+  unset -f nvm node npm npx pnpm _nvm_load
   if [ -s "$NVM_DIR/nvm.sh" ]; then
     . "$NVM_DIR/nvm.sh"
     [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
@@ -37,10 +37,11 @@ _load_nvm() {
   fi
 }
 
-nvm()  { _load_nvm; nvm "$@"; }
-node() { _load_nvm; node "$@"; }
-npm()  { _load_nvm; npm "$@"; }
-npx()  { _load_nvm; npx "$@"; }
+nvm()  { _nvm_load && nvm  "$@"; }
+node() { _nvm_load && node "$@"; }
+npm()  { _nvm_load && npm  "$@"; }
+npx()  { _nvm_load && npx  "$@"; }
+pnpm() { _nvm_load && pnpm "$@"; }
 
 export BASH_SILENCE_DEPRECATION_WARNING=1
 

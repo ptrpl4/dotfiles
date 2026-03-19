@@ -15,25 +15,24 @@ if command -v brew &>/dev/null; then
   FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 fi
 
-## Node Version Manager (lazy loaded for performance)
-export NVM_DIR="$HOME/nvm"
-
-# Lazy load NVM - only load when node/npm/nvm is actually used
-_load_nvm() {
-  unset -f nvm node npm npx _load_nvm
+## Node Version Manager
+# NVM_DIR and default node PATH are set in .zshenv (sourced for all shells).
+# Lazy load full NVM (nvm use, nvm install, etc.) — only when nvm command is called
+_nvm_load() {
+  unfunction nvm node npm npx pnpm _nvm_load 2>/dev/null
   if [ -s "$NVM_DIR/nvm.sh" ]; then
     . "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
   else
     echo "Warning: nvm not found at $NVM_DIR/nvm.sh" >&2
     return 1
   fi
 }
 
-nvm()  { _load_nvm; nvm "$@"; }
-node() { _load_nvm; node "$@"; }
-npm()  { _load_nvm; npm "$@"; }
-npx()  { _load_nvm; npx "$@"; }
+nvm()  { _nvm_load && nvm  "$@"; }
+node() { _nvm_load && node "$@"; }
+npm()  { _nvm_load && npm  "$@"; }
+npx()  { _nvm_load && npx  "$@"; }
+pnpm() { _nvm_load && pnpm "$@"; }
 
 ## Docker
 if [[ -d /Applications/Docker.app ]] || [[ -d ~/.docker/bin ]] || [[ -f /usr/local/bin/docker ]]; then
