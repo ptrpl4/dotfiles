@@ -52,7 +52,7 @@ prompt_git_box() {
 # Command execution time
 # Zsh preexec hook
 preexec() {
-    timer=$(($(date +%s%N)/1000000))
+    timer=$(perl -MTime::HiRes=time -e 'printf "%.0f\n", time * 1000')
 }
 
 # Improved Bash preexec support
@@ -80,7 +80,7 @@ if [ -n "$BASH_VERSION" ]; then
         esac
 
         # Start timer for user command
-        timer=$(($(date +%s%N)/1000000))
+        timer=$(perl -MTime::HiRes=time -e 'printf "%.0f\n", time * 1000')
         __preexec_invoked=1
     }
 
@@ -100,7 +100,7 @@ fi
 
 prompt_exec_time_box() {
     if [ -n "$timer" ]; then
-        local now=$(($(date +%s%N)/1000000))
+        local now=$(perl -MTime::HiRes=time -e 'printf "%.0f\n", time * 1000')
         local elapsed=$(($now-$timer))
         if [ $elapsed -gt 1000 ]; then
             local elapsed_sec=$(($elapsed/1000))

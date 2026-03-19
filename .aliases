@@ -5,4 +5,4 @@ alias android-2="emulator -avd Pixel_3_API_30 -memory 1024 -partition-size 512 -
 # brew
 
 ## multiuser 'support'
-alias brew-fix="sudo chown -R $(whoami) /opt/homebrew"
+brew-fix() { sudo chown -R "$(whoami)" /opt/homebrew; }
