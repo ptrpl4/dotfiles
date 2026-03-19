@@ -24,3 +24,7 @@ settings/obsidian/default/workspace.json
 settings/obsidian/default/plugins/*/main.js
 settings/obsidian/default/plugins/*/styles.css
 settings/obsidian/default/plugins/*/*.sh
+
+# llm
+
+.claude
