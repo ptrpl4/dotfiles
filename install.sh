@@ -109,6 +109,26 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   sudo pmset -a lessbright 0 # rollback - sudo pmset -b lessbright 1
 fi
 
+# link Claude Code config
+claude_dir="${HOME}/.claude"
+mkdir -p "${claude_dir}"
+for file in CLAUDE.md notes.md statusline-command.sh; do
+  if [[ -f "${claude_dir}/${file}" && ! -L "${claude_dir}/${file}" ]]; then
+    echo "Backing up Claude ${file}"
+    mkdir -p "${backup_dir}/claude"
+    cp "${claude_dir}/${file}" "${backup_dir}/claude/"
+  fi
+  ln -sf "${dotfiles_dir}/settings/claude/${file}" "${claude_dir}/${file}"
+done
+
+# settings.json — template __HOME__ with actual path (not symlinked, machine-specific)
+if [[ -f "${claude_dir}/settings.json" ]]; then
+  mkdir -p "${backup_dir}/claude"
+  cp "${claude_dir}/settings.json" "${backup_dir}/claude/"
+fi
+sed "s|__HOME__|${HOME}|g" "${dotfiles_dir}/settings/claude/settings.json" > "${claude_dir}/settings.json"
+echo "Claude Code config linked"
+
 # link Obsidian settings (vault paths defined in .private)
 if [[ ${#OBSIDIAN_VAULTS[@]} -gt 0 ]]; then
   for vault_path in "${OBSIDIAN_VAULTS[@]}"; do
