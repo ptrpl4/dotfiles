@@ -2,6 +2,7 @@
   // ============================================================================
   // EDITOR BEHAVIOR
   // ============================================================================
+  "use_system_path_prompts": true,
   "format_on_save": "off",
   "auto_update": false,
   "autosave": "on_focus_change",
@@ -38,10 +39,17 @@
     "mode": "subtle"
   },
   "agent": {
+    "favorite_models": [
+      {
+        "provider": "ollama",
+        "model": "qwen2.5-coder:7b",
+        "enable_thinking": false
+      }
+    ],
     "default_profile": "write",
     "default_model": {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-5-thinking-latest"
+      "provider": "google",
+      "model": "gemini-3-flash-preview"
     }
   },
 
