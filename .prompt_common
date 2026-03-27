@@ -4,8 +4,10 @@ reset=$(tput sgr0)
 
 # Current time display
 prompt_time() {
-    local time_str=$(date +"%H${gray}:%${reset}%M")
-    printf "%b─[%b%s%b]" "${gray}" "${reset}" "${time_str}" "${gray}"
+    local raw=$(date +"%H:%M")
+    local h="${raw%%:*}"
+    local m="${raw##*:}"
+    printf "%b─[%b%s%b:%b%s%b]" "${gray}" "${reset}" "$h" "${gray}" "${reset}" "$m" "${gray}"
 }
 
 

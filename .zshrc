@@ -50,4 +50,3 @@ fi
 if [[ -n $PROFILE_STARTUP ]]; then
   zprof
 fi
-
