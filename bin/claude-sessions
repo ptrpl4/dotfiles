@@ -52,19 +52,19 @@ session_metadata() {
   local raw ts_first ts_last out_tokens
   raw=$(jq -rs '
     [ (map(select(.type == "custom-title")) | first | .customTitle // ""),
-      (map(select(.type == "user")) | first
+      (try (map(select(.type == "user")) | first
         | (.message.content // []) | map(select(.type == "text")) | first | .text // ""
-        | gsub("[\n\r]"; " ") | .[0:80]),
+        | gsub("[\n\r\t]"; " ") | .[0:80]) catch ""),
       (map(select(.type == "user")) | length | tostring),
       (map(select(.gitBranch != null)) | first | .gitBranch // ""),
       (map(select(.type == "assistant")) | first | .message.model // ""),
       ([.[] | select(.type == "assistant") | .message.usage.output_tokens // 0] | add // 0 | tostring),
       (map(select(.timestamp != null)) | first | .timestamp // ""),
       (map(select(.timestamp != null)) | last  | .timestamp // "")
-    ] | join("\t")
+    ] | join("\u0001")
   ' "$file" 2>/dev/null)
 
-  IFS=$'\t' read -r SM_NAME SM_SNIPPET SM_MSGS SM_BRANCH SM_MODEL out_tokens ts_first ts_last <<< "$raw"
+  IFS=$'\x01' read -r SM_NAME SM_SNIPPET SM_MSGS SM_BRANCH SM_MODEL out_tokens ts_first ts_last <<< "$raw"
   SM_MSGS=${SM_MSGS:-0}
 
   # Handle snippet fallback: if empty, try extracting command-name from raw content
@@ -446,7 +446,7 @@ cmd_thin() {
     [[ "$f" == */subagents/* ]] && continue
     local sid msg_count
     sid=$(basename "$f" .jsonl)
-    msg_count=$(grep -c '"type":"user"' "$f" 2>/dev/null)
+    msg_count=$(jq -rs '[.[] | select(.type == "user")] | length' "$f" 2>/dev/null)
     msg_count=${msg_count:-0}
     [[ "$msg_count" -le "$max_msgs" ]] || continue
     if is_active_session "$sid"; then
@@ -491,7 +491,7 @@ cmd_thin() {
       local f="${to_delete[$i]}"
       local name mc rel_time g_session g_meta
       name=$(session_name "$f")
-      mc=$(grep -c '"type":"user"' "$f" 2>/dev/null)
+      mc=$(jq -rs '[.[] | select(.type == "user")] | length' "$f" 2>/dev/null)
       mc=${mc:-0}
       rel_time=$(file_rel_time "$f")
       g_session=$(gray '[session]')
