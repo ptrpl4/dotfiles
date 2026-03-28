@@ -36,6 +36,22 @@ Override git identity per machine. Included by `.gitconfig` automatically.
 - Check `~/dotfiles/backups` — previous versions of overwritten files are saved there
 - NVM and Docker are expected to be installed
 
+## Tools
+
+### `claude-sessions` (`cs`)
+
+Manage Claude Code session files in `~/.claude/projects/`.
+
+```
+cs ls                 # list all sessions grouped by project
+cs ls --folders       # list projects only (no session detail)
+cs thin <n>           # delete sessions with ≤ n user messages
+cs clean <days>       # delete sessions older than n days
+cs delete <id>        # delete a session by ID (partial match ok)
+```
+
+Deleting a session also removes its `~/.claude/file-history/<id>/` directory.
+
 ## TODO
 
 - [ ] Add `make help` target
