@@ -26,7 +26,7 @@ sorted_sessions() {
 project_enc_for() {
   local file="$1"
   if [[ "$file" == */subagents/* ]]; then
-    # projects/<enc>/<session-id>/subagents/<agent-id>.jsonl → go up 4 levels
+    # projects/<enc>/<session-id>/subagents/<agent-id>.jsonl → enc is 3 dirs up
     basename "$(dirname "$(dirname "$(dirname "$file")")")"
   else
     # projects/<enc>/<session-id>.jsonl → go up 1 level
@@ -85,20 +85,19 @@ session_metadata() {
   out_tokens=$(grep '"type":"assistant"' "$file" 2>/dev/null \
     | jq -r '.message.usage.output_tokens // 0' 2>/dev/null \
     | awk '{s+=$1} END {print s+0}')
-  [[ "$out_tokens" -gt 0 ]] 2>/dev/null && SM_TOKENS="$out_tokens"
+  [[ "$out_tokens" =~ ^[0-9]+$ && "$out_tokens" -gt 0 ]] && SM_TOKENS="$out_tokens"
 
-  # Duration: first to last non-null timestamp
-  local ts_first ts_last
-  ts_first=$(grep '"timestamp"' "$file" 2>/dev/null \
-    | jq -r 'select(.timestamp != null) | .timestamp' 2>/dev/null | head -1)
-  ts_last=$(grep '"timestamp"' "$file" 2>/dev/null \
-    | jq -r 'select(.timestamp != null) | .timestamp' 2>/dev/null | tail -1)
+  # Duration: first to last non-null timestamp (one file scan, split for head/tail)
+  local ts_first ts_last ts_lines
+  ts_lines=$(grep -o '"timestamp":"[^"]*"' "$file" 2>/dev/null | sed 's/"timestamp":"//;s/"//')
+  ts_first=$(echo "$ts_lines" | head -1)
+  ts_last=$(echo "$ts_lines" | tail -1)
   if [[ -n "$ts_first" && -n "$ts_last" && "$ts_first" != "$ts_last" ]]; then
-    local t1 t2
+    local t1 t2 diff
     t1=$(date -d "$ts_first" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${ts_first%%.*}" +%s 2>/dev/null)
     t2=$(date -d "$ts_last"  +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${ts_last%%.*}"  +%s 2>/dev/null)
     if [[ -n "$t1" && -n "$t2" ]]; then
-      local diff=$(( t2 - t1 ))
+      diff=$(( t2 - t1 ))
       if   [[ $diff -ge 86400 ]]; then SM_DURATION="$(( diff/86400 ))d $(( (diff%86400)/3600 ))h"
       elif [[ $diff -ge 3600  ]]; then SM_DURATION="$(( diff/3600 ))h $(( (diff%3600)/60 ))m"
       elif [[ $diff -ge 60    ]]; then SM_DURATION="$(( diff/60 ))m"
@@ -110,7 +109,7 @@ session_metadata() {
   # File size (human readable)
   local bytes
   bytes=$(wc -c < "$file" 2>/dev/null | tr -d ' ')
-  if [[ -n "$bytes" && "$bytes" -gt 0 ]] 2>/dev/null; then
+  if [[ "$bytes" =~ ^[0-9]+$ && "$bytes" -gt 0 ]]; then
     if   [[ $bytes -ge 1048576 ]]; then SM_SIZE="$(( bytes/1048576 ))MB"
     elif [[ $bytes -ge 1024    ]]; then SM_SIZE="$(( bytes/1024 ))KB"
     else                                SM_SIZE="${bytes}B"
@@ -196,8 +195,7 @@ collect_active() {
       [[ -f "$f" ]] || continue
       local sid sname
       sid=$(basename "$f" .jsonl)
-      session_metadata "$f"
-      sname="${SM_NAME:-$SM_SNIPPET}"
+      sname=$(session_name "$f")
       ACTIVE_SESSION_IDS+=("$sid")
       ACTIVE_SESSION_NAMES+=("${sname:-$sid}")
       ACTIVE_SESSION_ENCS+=("$enc")
@@ -290,16 +288,16 @@ cmd_list() {
           printf "    $(green '* active')\n"
         fi
         printf "    $(gray 'id:    ') %s\n" "$session_id"
+        local detail_line=""
+        [[ -n "$model"  ]] && detail_line+="$(gray 'model:') ${model}"
+        [[ -n "$branch" ]] && detail_line+="  $(gray 'branch:') ${branch}"
+        [[ -n "$detail_line" ]] && printf "    %s\n" "$detail_line"
         local meta_line="    "
         meta_line+="$(gray 'msgs:') ${msgs}"
         [[ -n "$duration" ]] && meta_line+="  $(gray 'duration:') ${duration}"
         [[ -n "$tokens"   ]] && meta_line+="  $(gray 'tokens:') ${tokens}"
         [[ -n "$size"     ]] && meta_line+="  $(gray 'size:') ${size}"
         printf "%s\n" "$meta_line"
-        local detail_line=""
-        [[ -n "$model"  ]] && detail_line+="$(gray 'model:') ${model}"
-        [[ -n "$branch" ]] && detail_line+="  $(gray 'branch:') ${branch}"
-        [[ -n "$detail_line" ]] && printf "    %s\n" "$detail_line"
         [[ -n "$snippet" && "$snippet" != "$name" ]] && printf "    $(gray 'msg:   ') %s\n" "$snippet"
       fi
       echo ""

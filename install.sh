@@ -112,7 +112,7 @@ fi
 # link Claude Code config
 claude_dir="${HOME}/.claude"
 mkdir -p "${claude_dir}"
-for file in CLAUDE.md notes.md statusline-command.sh settings.json keybindings.json; do
+for file in CLAUDE.md statusline-command.sh settings.json keybindings.json; do
   if [[ -f "${claude_dir}/${file}" && ! -L "${claude_dir}/${file}" ]]; then
     echo "Backing up Claude ${file}"
     mkdir -p "${backup_dir}/claude"

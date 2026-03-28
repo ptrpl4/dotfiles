@@ -63,7 +63,7 @@ backup_claude() {
   mkdir -p "${dest}"
 
   # Global config files
-  for file in CLAUDE.md settings.json notes.md; do
+  for file in CLAUDE.md settings.json; do
     backup_file "${CLAUDE_DIR}/${file}" "${dest}"
   done
 

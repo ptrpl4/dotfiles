@@ -6,6 +6,7 @@ alias android-2="emulator -avd Pixel_3_API_30 -memory 1024 -partition-size 512 -
 
 # shell
 alias reload='exec $SHELL -l'
+alias cs='claude-sessions'
 
 ## multiuser 'support'
 brew-fix() { sudo chown -R "$(whoami)" /opt/homebrew; }
