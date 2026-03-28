@@ -71,3 +71,6 @@ fi
 
 ## local binaries (pipx, poetry, etc.)
 export PATH="$HOME/.local/bin:$PATH"
+
+## dotfiles scripts
+export PATH="$HOME/dotfiles/bin:$PATH"

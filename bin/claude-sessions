@@ -1,0 +1,442 @@
+#!/usr/bin/env bash
+# claude-sessions — list and manage Claude Code sessions
+
+PROJECTS_DIR="${HOME}/.claude/projects"
+SESSIONS_DIR="${HOME}/.claude/sessions"
+
+usage() {
+  cat <<EOF
+Usage: claude-sessions <command> [args]
+
+Commands:
+  list|ls           List all sessions (newest first)
+  delete|rm|dl <id> Delete session by ID (partial match ok)
+  clean <days>      Delete sessions older than N days
+EOF
+}
+
+# Cross-platform: sort .jsonl files by modification time, newest first
+# maxdepth 4 includes subagent files: projects/<enc>/<session-id>/subagents/<agent-id>.jsonl
+sorted_sessions() {
+  find "$PROJECTS_DIR" -maxdepth 4 -name "*.jsonl" -print0 \
+    | xargs -0 ls -t 2>/dev/null
+}
+
+# Get encoded project dir for any session file (handles both regular and subagent paths)
+project_enc_for() {
+  local file="$1"
+  if [[ "$file" == */subagents/* ]]; then
+    # projects/<enc>/<session-id>/subagents/<agent-id>.jsonl → go up 4 levels
+    basename "$(dirname "$(dirname "$(dirname "$file")")")"
+  else
+    # projects/<enc>/<session-id>.jsonl → go up 1 level
+    basename "$(dirname "$file")"
+  fi
+}
+
+# Get parent session ID for a subagent file
+subagent_parent() {
+  local file="$1"
+  [[ "$file" == */subagents/* ]] || return
+  basename "$(dirname "$(dirname "$file")")"
+}
+
+# Read a session file once and set all SM_* globals
+# Sets: SM_NAME SM_SNIPPET SM_MSGS SM_BRANCH SM_MODEL SM_TOKENS SM_DURATION SM_SIZE
+session_metadata() {
+  local file="$1"
+  SM_NAME="" SM_SNIPPET="" SM_MSGS="0" SM_BRANCH="" SM_MODEL="" SM_TOKENS="" SM_DURATION="" SM_SIZE=""
+
+  local custom_title first_user_line branch_line model_line
+  custom_title=$(grep -m1 '"type":"custom-title"' "$file" 2>/dev/null)
+  first_user_line=$(grep -m1 '"type":"user"' "$file" 2>/dev/null)
+  branch_line=$(grep -m1 '"gitBranch"' "$file" 2>/dev/null)
+  model_line=$(grep -m1 '"type":"assistant"' "$file" 2>/dev/null)
+
+  if [[ -n "$custom_title" ]]; then
+    SM_NAME=$(printf '%s' "$custom_title" | jq -r '.customTitle // ""' 2>/dev/null)
+  fi
+
+  if [[ -n "$first_user_line" ]]; then
+    local raw
+    raw=$(printf '%s' "$first_user_line" \
+      | jq -r '(.message.content // []) | map(select(.type == "text")) | .[0].text // ""' 2>/dev/null \
+      | tr '\n' ' ')
+    if [[ -z "${raw// }" ]]; then
+      raw=$(printf '%s' "$first_user_line" \
+        | grep -o '<command-name>[^<]*</command-name>' \
+        | sed 's|<[^>]*>||g')
+    fi
+    SM_SNIPPET=$(echo "$raw" | cut -c1-80)
+  fi
+
+  SM_MSGS=$(grep -c '"type":"user"' "$file" 2>/dev/null || echo "0")
+
+  if [[ -n "$branch_line" ]]; then
+    SM_BRANCH=$(printf '%s' "$branch_line" | jq -r '.gitBranch // ""' 2>/dev/null)
+  fi
+
+  if [[ -n "$model_line" ]]; then
+    SM_MODEL=$(printf '%s' "$model_line" | jq -r '.message.model // ""' 2>/dev/null)
+  fi
+
+  # Token totals across all assistant messages (output tokens only — most meaningful for cost)
+  local out_tokens
+  out_tokens=$(grep '"type":"assistant"' "$file" 2>/dev/null \
+    | jq -r '.message.usage.output_tokens // 0' 2>/dev/null \
+    | awk '{s+=$1} END {print s+0}')
+  [[ "$out_tokens" -gt 0 ]] 2>/dev/null && SM_TOKENS="$out_tokens"
+
+  # Duration: first to last non-null timestamp
+  local ts_first ts_last
+  ts_first=$(grep '"timestamp"' "$file" 2>/dev/null \
+    | jq -r 'select(.timestamp != null) | .timestamp' 2>/dev/null | head -1)
+  ts_last=$(grep '"timestamp"' "$file" 2>/dev/null \
+    | jq -r 'select(.timestamp != null) | .timestamp' 2>/dev/null | tail -1)
+  if [[ -n "$ts_first" && -n "$ts_last" && "$ts_first" != "$ts_last" ]]; then
+    local t1 t2
+    t1=$(date -d "$ts_first" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${ts_first%%.*}" +%s 2>/dev/null)
+    t2=$(date -d "$ts_last"  +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${ts_last%%.*}"  +%s 2>/dev/null)
+    if [[ -n "$t1" && -n "$t2" ]]; then
+      local diff=$(( t2 - t1 ))
+      if   [[ $diff -ge 86400 ]]; then SM_DURATION="$(( diff/86400 ))d $(( (diff%86400)/3600 ))h"
+      elif [[ $diff -ge 3600  ]]; then SM_DURATION="$(( diff/3600 ))h $(( (diff%3600)/60 ))m"
+      elif [[ $diff -ge 60    ]]; then SM_DURATION="$(( diff/60 ))m"
+      else                              SM_DURATION="${diff}s"
+      fi
+    fi
+  fi
+
+  # File size (human readable)
+  local bytes
+  bytes=$(wc -c < "$file" 2>/dev/null | tr -d ' ')
+  if [[ -n "$bytes" && "$bytes" -gt 0 ]] 2>/dev/null; then
+    if   [[ $bytes -ge 1048576 ]]; then SM_SIZE="$(( bytes/1048576 ))MB"
+    elif [[ $bytes -ge 1024    ]]; then SM_SIZE="$(( bytes/1024 ))KB"
+    else                                SM_SIZE="${bytes}B"
+    fi
+  fi
+}
+
+# Single-field name lookup (used by cmd_delete and cmd_clean for display only)
+session_name() {
+  grep -m1 '"type":"custom-title"' "$1" 2>/dev/null \
+    | jq -r '.customTitle // ""' 2>/dev/null \
+    || echo ""
+}
+
+# Relative time from file mtime: "2h ago", "3 days ago", etc.
+file_rel_time() {
+  local mtime now diff
+  mtime=$(date -r "$1" +%s 2>/dev/null) || return
+  now=$(date +%s)
+  diff=$(( now - mtime ))
+  if   [[ $diff -lt 60     ]]; then echo "just now"
+  elif [[ $diff -lt 3600   ]]; then echo "$(( diff/60 ))m ago"
+  elif [[ $diff -lt 86400  ]]; then echo "$(( diff/3600 ))h ago"
+  elif [[ $diff -lt 604800 ]]; then echo "$(( diff/86400 )) days ago"
+  else                               echo "$(date -r "$1" +"%Y-%m-%d" 2>/dev/null)"
+  fi
+}
+
+bold()  { printf "\033[1m%s\033[0m" "$1"; }
+green() { printf "\033[32m%s\033[0m" "$1"; }
+gray()  { printf "\033[90m%s\033[0m" "$1"; }
+red()   { printf "\033[31m%s\033[0m" "$1"; }
+
+# Populate globals: ACTIVE_PIDS, ACTIVE_CWDS, ACTIVE_ENCODED,
+# ACTIVE_SESSION_IDS, ACTIVE_SESSION_NAMES, ACTIVE_SESSION_ENCS
+collect_active() {
+  ACTIVE_PIDS=()
+  ACTIVE_CWDS=()
+  ACTIVE_ENCODED=()
+  ACTIVE_SESSION_IDS=()
+  ACTIVE_SESSION_NAMES=()   # parallel to ACTIVE_SESSION_IDS
+  ACTIVE_SESSION_ENCS=()    # which encoded project each session belongs to
+
+  [[ -d "$SESSIONS_DIR" ]] || return
+
+  # Collect alive pids and their cwds
+  for f in "$SESSIONS_DIR"/*.json; do
+    [[ -f "$f" ]] || continue
+    local pid cwd
+    pid=$(jq -r '.pid // ""' "$f")
+    cwd=$(jq -r '.cwd // ""' "$f")
+    [[ -z "$pid" || -z "$cwd" ]] && continue
+    kill -0 "$pid" 2>/dev/null || continue
+    ACTIVE_PIDS+=("$pid")
+    ACTIVE_CWDS+=("$cwd")
+    ACTIVE_ENCODED+=("$(echo "$cwd" | sed 's|/|-|g')")
+  done
+
+  # Build encoded_cwd -> pid count (bash 3, no associative arrays)
+  local active_enc_keys=()
+  local active_enc_counts=()
+  for enc in "${ACTIVE_ENCODED[@]+"${ACTIVE_ENCODED[@]}"}"; do
+    local found=0
+    for k in "${!active_enc_keys[@]}"; do
+      if [[ "${active_enc_keys[$k]}" == "$enc" ]]; then
+        active_enc_counts[$k]=$((active_enc_counts[$k] + 1))
+        found=1; break
+      fi
+    done
+    if [[ $found -eq 0 ]]; then
+      active_enc_keys+=("$enc")
+      active_enc_counts+=(1)
+    fi
+  done
+
+  # For each active project, mark N most recent sessions (N = pid count)
+  for k in "${!active_enc_keys[@]}"; do
+    local enc="${active_enc_keys[$k]}"
+    local n="${active_enc_counts[$k]}"
+    local project_dir="${PROJECTS_DIR}/${enc}"
+    local i=0
+    while IFS= read -r f && [[ $i -lt $n ]]; do
+      [[ -f "$f" ]] || continue
+      local sid sname
+      sid=$(basename "$f" .jsonl)
+      session_metadata "$f"
+      sname="${SM_NAME:-$SM_SNIPPET}"
+      ACTIVE_SESSION_IDS+=("$sid")
+      ACTIVE_SESSION_NAMES+=("${sname:-$sid}")
+      ACTIVE_SESSION_ENCS+=("$enc")
+      i=$((i + 1))
+    done < <(ls -t "${project_dir}"/*.jsonl 2>/dev/null)
+  done
+}
+
+# Check if a session ID is active
+is_active_session() {
+  local sid="$1"
+  for aid in "${ACTIVE_SESSION_IDS[@]+"${ACTIVE_SESSION_IDS[@]}"}"; do
+    [[ "$aid" == "$sid" ]] && return 0
+  done
+  return 1
+}
+
+cmd_list() {
+  collect_active
+
+  # Collect unique project dirs ordered by most recently active (first seen in global mtime sort)
+  local project_encs=()
+  while IFS= read -r file; do
+    [[ -f "$file" ]] || continue
+    local enc
+    enc=$(project_enc_for "$file")
+    local found=0
+    for p in "${project_encs[@]+"${project_encs[@]}"}"; do
+      [[ "$p" == "$enc" ]] && { found=1; break; }
+    done
+    [[ $found -eq 0 ]] && project_encs+=("$enc")
+  done < <(sorted_sessions)
+
+  local total=0
+
+  for project_enc in "${project_encs[@]+"${project_encs[@]}"}"; do
+    local project_dir
+    project_dir=$(echo "$project_enc" | sed 's|^-||; s|-|/|g')
+
+    # Count sessions, agents, active for this project
+    local session_count agent_count active_count
+    session_count=$(find "${PROJECTS_DIR}/${project_enc}" -maxdepth 1 -name "*.jsonl" 2>/dev/null | wc -l | tr -d ' ')
+    agent_count=$(find "${PROJECTS_DIR}/${project_enc}" -maxdepth 3 -path "*/subagents/*.jsonl" 2>/dev/null | wc -l | tr -d ' ')
+    active_count=0
+    if [[ ${#ACTIVE_SESSION_ENCS[@]} -gt 0 ]]; then
+      for idx in "${!ACTIVE_SESSION_ENCS[@]}"; do
+        [[ "${ACTIVE_SESSION_ENCS[$idx]}" == "$project_enc" ]] && active_count=$((active_count + 1))
+      done
+    fi
+
+    # Build folder stats with correct pluralization
+    local s_sessions; [[ $session_count -eq 1 ]] && s_sessions="session" || s_sessions="sessions"
+    local s_agents;   [[ $agent_count   -eq 1 ]] && s_agents="agent"   || s_agents="agents"
+    local stats="${session_count} ${s_sessions}"
+    [[ $agent_count -gt 0 ]] && stats+=" · ${agent_count} ${s_agents}"
+    [[ $active_count -gt 0 ]] && stats+=" · $(green "${active_count} active")"
+
+    printf "\n$(gray "[folder]") /${project_dir}  $(gray "(${stats})")\n\n"
+
+    # Sessions in this project sorted by mtime (includes subagents)
+    while IFS= read -r file; do
+      [[ -f "$file" ]] || continue
+      local session_id rel_time name snippet msgs branch model tokens duration size is_subagent parent_id
+      session_id=$(basename "$file" .jsonl)
+      rel_time=$(file_rel_time "$file")
+      session_metadata "$file"
+      name="${SM_NAME:-$SM_SNIPPET}"
+      snippet="$SM_SNIPPET"
+      msgs="$SM_MSGS"
+      branch="$SM_BRANCH"
+      model="$SM_MODEL"
+      tokens="$SM_TOKENS"
+      duration="$SM_DURATION"
+      size="$SM_SIZE"
+      is_subagent=0
+      [[ "$file" == */subagents/* ]] && is_subagent=1
+
+      if [[ $is_subagent -eq 1 ]]; then
+        parent_id=$(subagent_parent "$file")
+        printf "    $(gray '[agent]') %s  $(gray '· %s')\n" "$(gray "${name:-$session_id}")" "$rel_time"
+        printf "      $(gray 'parent:') %s\n" "$parent_id"
+        printf "      $(gray 'id:    ') %s\n" "$session_id"
+        printf "      $(gray 'msgs:  ') %s" "$msgs"
+        [[ -n "$duration" ]] && printf "  $(gray 'duration:') %s" "$duration"
+        [[ -n "$branch"   ]] && printf "  $(gray 'branch:') %s" "$branch"
+        echo ""
+      else
+        printf "  $(gray '[session]') %s  $(gray '· %s')\n" "$(bold "${name:-$session_id}")" "$rel_time"
+        if is_active_session "$session_id"; then
+          printf "    $(green '* active')\n"
+        fi
+        printf "    $(gray 'id:    ') %s\n" "$session_id"
+        local meta_line="    "
+        meta_line+="$(gray 'msgs:') ${msgs}"
+        [[ -n "$duration" ]] && meta_line+="  $(gray 'duration:') ${duration}"
+        [[ -n "$tokens"   ]] && meta_line+="  $(gray 'tokens:') ${tokens}"
+        [[ -n "$size"     ]] && meta_line+="  $(gray 'size:') ${size}"
+        printf "%s\n" "$meta_line"
+        local detail_line=""
+        [[ -n "$model"  ]] && detail_line+="$(gray 'model:') ${model}"
+        [[ -n "$branch" ]] && detail_line+="  $(gray 'branch:') ${branch}"
+        [[ -n "$detail_line" ]] && printf "    %s\n" "$detail_line"
+        [[ -n "$snippet" && "$snippet" != "$name" ]] && printf "    $(gray 'msg:   ') %s\n" "$snippet"
+      fi
+      echo ""
+      total=$((total + 1))
+    done < <(find "${PROJECTS_DIR}/${project_enc}" -maxdepth 3 -name "*.jsonl" -print0 \
+               | xargs -0 ls -t 2>/dev/null)
+  done
+
+  if [[ $total -eq 0 ]]; then echo "No sessions found."; fi
+}
+
+cmd_delete() {
+  local pattern="${1:-}"
+  [[ -z "$pattern" ]] && { echo "Usage: claude-sessions delete <session-id>"; exit 1; }
+
+  local matches=()
+  while IFS= read -r file; do
+    matches+=("$file")
+  done < <(find "$PROJECTS_DIR" -maxdepth 4 -name "*${pattern}*.jsonl" 2>/dev/null)
+
+  if [[ ${#matches[@]} -eq 0 ]]; then
+    echo "No session or agent found matching: $pattern"
+    exit 1
+  fi
+
+  if [[ ${#matches[@]} -gt 1 ]]; then
+    echo "Multiple sessions match '$pattern' — be more specific:"
+    for f in "${matches[@]}"; do echo "  $(basename "$f" .jsonl)"; done
+    exit 1
+  fi
+
+  local file="${matches[0]}"
+  local session_id
+  session_id=$(basename "$file" .jsonl)
+  local is_agent=0
+  [[ "$file" == */subagents/* ]] && is_agent=1
+
+  collect_active
+  if is_active_session "$session_id"; then
+    echo "$(red 'Error:') session is currently active — close it before deleting."
+    exit 1
+  fi
+
+  local name
+  name=$(session_name "$file")
+  local label; [[ $is_agent -eq 1 ]] && label="agent" || label="session"
+  echo "Delete ${label}: ${name:-$session_id}"
+  echo "  $file"
+
+  # For regular sessions, also show subagent dir if it exists
+  local subagent_dir="${PROJECTS_DIR}/$(basename "$(dirname "$file")")/${session_id}"
+  if [[ $is_agent -eq 0 && -d "$subagent_dir" ]]; then
+    local agent_count
+    agent_count=$(find "$subagent_dir" -name "*.jsonl" 2>/dev/null | wc -l | tr -d ' ')
+    [[ $agent_count -gt 0 ]] && echo "  + ${agent_count} subagent file(s) in ${subagent_dir}"
+  fi
+
+  read -r -p "Confirm? [y/N] " confirm
+  [[ "$confirm" =~ ^[Yy]$ ]] || { echo "Cancelled."; exit 0; }
+  rm "$file"
+  # Remove subagent directory if it exists (and we're deleting a session)
+  if [[ $is_agent -eq 0 && -d "$subagent_dir" ]]; then
+    rm -rf "$subagent_dir"
+  fi
+  echo "Deleted."
+}
+
+cmd_clean() {
+  local days="${1:-}"
+  [[ -z "$days" ]] && { echo "Usage: claude-sessions clean <days>"; exit 1; }
+
+  collect_active
+
+  # Collect files to delete, skipping active sessions
+  local to_delete=()
+  local skipped=()
+  while IFS= read -r f; do
+    [[ -f "$f" ]] || continue
+    local sid
+    sid=$(basename "$f" .jsonl)
+    if is_active_session "$sid"; then
+      skipped+=("$f")
+    else
+      to_delete+=("$f")
+    fi
+  done < <(find "$PROJECTS_DIR" -name "*.jsonl" -mtime +"$days" 2>/dev/null)
+
+  if [[ ${#skipped[@]} -gt 0 ]]; then
+    printf "$(red 'Skipping %d active session(s):')\n" "${#skipped[@]}"
+    for f in "${skipped[@]}"; do
+      local name
+      name=$(session_name "$f")
+      echo "  ${name:-$(basename "$f" .jsonl)}"
+    done
+    echo ""
+  fi
+
+  if [[ ${#to_delete[@]} -eq 0 ]]; then
+    echo "No sessions older than $days days to delete."
+    exit 0
+  fi
+
+  echo "Sessions older than $days days:"
+  for f in "${to_delete[@]}"; do
+    local name
+    name=$(session_name "$f")
+    echo "  ${name:-$(basename "$f" .jsonl)}"
+  done
+  echo ""
+  read -r -p "Delete ${#to_delete[@]} session(s)? [y/N] " confirm
+  [[ "$confirm" =~ ^[Yy]$ ]] || { echo "Cancelled."; exit 0; }
+
+  # Safe deletion: null-separated, no word splitting
+  printf '%s\0' "${to_delete[@]}" | xargs -0 rm
+
+  # Remove orphaned subagent directories (parent .jsonl gone)
+  # These are dirs at depth 2: projects/<enc>/<session-id>/
+  local orphan_dirs=()
+  while IFS= read -r subdir; do
+    local session_id enc parent_jsonl
+    session_id=$(basename "$subdir")
+    enc=$(basename "$(dirname "$subdir")")
+    parent_jsonl="${PROJECTS_DIR}/${enc}/${session_id}.jsonl"
+    [[ -f "$parent_jsonl" ]] || orphan_dirs+=("$subdir")
+  done < <(find "$PROJECTS_DIR" -mindepth 2 -maxdepth 2 -type d 2>/dev/null)
+
+  if [[ ${#orphan_dirs[@]} -gt 0 ]]; then
+    printf "Removing %d orphaned subagent director(ies)...\n" "${#orphan_dirs[@]}"
+    printf '%s\0' "${orphan_dirs[@]}" | xargs -0 rm -rf
+  fi
+
+  echo "Done."
+}
+
+case "${1:-}" in
+  list|ls)        cmd_list ;;
+  delete|rm|dl)   cmd_delete "${2:-}" ;;
+  clean)          cmd_clean "${2:-}" ;;
+  *)              usage ;;
+esac

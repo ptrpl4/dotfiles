@@ -66,3 +66,6 @@ fi
 
 ## golang
 export PATH="$PATH:$HOME/go/bin"
+
+## dotfiles scripts
+export PATH="$HOME/dotfiles/bin:$PATH"
