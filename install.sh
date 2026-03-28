@@ -112,7 +112,7 @@ fi
 # link Claude Code config
 claude_dir="${HOME}/.claude"
 mkdir -p "${claude_dir}"
-for file in CLAUDE.md notes.md statusline-command.sh; do
+for file in CLAUDE.md notes.md statusline-command.sh settings.json keybindings.json; do
   if [[ -f "${claude_dir}/${file}" && ! -L "${claude_dir}/${file}" ]]; then
     echo "Backing up Claude ${file}"
     mkdir -p "${backup_dir}/claude"
@@ -121,12 +121,14 @@ for file in CLAUDE.md notes.md statusline-command.sh; do
   ln -sf "${dotfiles_dir}/settings/claude/${file}" "${claude_dir}/${file}"
 done
 
-# settings.json — template __HOME__ with actual path (not symlinked, machine-specific)
-if [[ -f "${claude_dir}/settings.json" ]]; then
-  mkdir -p "${backup_dir}/claude"
-  cp "${claude_dir}/settings.json" "${backup_dir}/claude/"
-fi
-sed "s|__HOME__|${HOME}|g" "${dotfiles_dir}/settings/claude/settings.json" > "${claude_dir}/settings.json"
+for dir in skills rules; do
+  if [[ -d "${claude_dir}/${dir}" && ! -L "${claude_dir}/${dir}" ]]; then
+    echo "Backing up Claude ${dir}/"
+    mkdir -p "${backup_dir}/claude"
+    cp -r "${claude_dir}/${dir}" "${backup_dir}/claude/"
+  fi
+  ln -sfn "${dotfiles_dir}/settings/claude/${dir}" "${claude_dir}/${dir}"
+done
 echo "Claude Code config linked"
 
 # link Obsidian settings (vault paths defined in .private)

@@ -1,17 +1,11 @@
 {
   "permissions": {
-    "allow": [
-      "mcp__acp__Edit",
-      "mcp__acp__Bash",
-      "mcp__acp__Write"
-    ],
-    "defaultMode": "dontAsk"
+    "allow": [],
+    "defaultMode": "acceptEdits"
   },
-  "model": "opus",
   "statusLine": {
     "type": "command",
-    "command": "bash __HOME__/.claude/statusline-command.sh"
+    "command": "bash $HOME/.claude/statusline-command.sh"
   },
-  "autoUpdatesChannel": "stable",
-  "minimumVersion": "2.1.69"
+  "autoUpdatesChannel": "latest"
 }

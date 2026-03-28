@@ -48,13 +48,33 @@
         "provider": "anthropic",
         "model": "claude-sonnet-4-6-thinking-latest",
         "enable_thinking": false
+      },
+      {
+        "provider": "anthropic",
+        "model": "claude-opus-4-6-1m-context-latest",
+        "enable_thinking": false
+      },
+      {
+        "provider": "anthropic",
+        "model": "claude-opus-4-6-1m-context-thinking-latest",
+        "enable_thinking": false
+      },
+      {
+        "provider": "anthropic",
+        "model": "claude-opus-4-6-latest",
+        "enable_thinking": false
+      },
+      {
+        "provider": "anthropic",
+        "model": "claude-opus-4-6-thinking-latest",
+        "enable_thinking": false
       }
     ],
     "default_profile": "write",
     "default_model": {
       "enable_thinking": true,
       "provider": "anthropic",
-      "model": "claude-sonnet-4-6-thinking-latest"
+      "model": "claude-opus-4-6-thinking-latest"
     }
   },
 
