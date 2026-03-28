@@ -12,6 +12,7 @@ Commands:
   list|ls           List all sessions (newest first)
   delete|rm|dl <id> Delete session by ID (partial match ok)
   clean <days>      Delete sessions older than N days
+  thin <msgs>       Delete sessions with ≤ N user messages
 EOF
 }
 
@@ -229,7 +230,7 @@ cmd_list() {
     [[ $found -eq 0 ]] && project_encs+=("$enc")
   done < <(sorted_sessions)
 
-  local total=0
+  local total=0 total_sessions=0 total_agents=0 total_active=0
 
   for project_enc in "${project_encs[@]+"${project_encs[@]}"}"; do
     local project_dir
@@ -252,6 +253,9 @@ cmd_list() {
     local stats="${session_count} ${s_sessions}"
     [[ $agent_count -gt 0 ]] && stats+=" · ${agent_count} ${s_agents}"
     [[ $active_count -gt 0 ]] && stats+=" · $(green "${active_count} active")"
+    total_sessions=$((total_sessions + session_count))
+    total_agents=$((total_agents + agent_count))
+    total_active=$((total_active + active_count))
 
     printf "\n$(gray "[folder]") /${project_dir}  $(gray "(${stats})")\n\n"
 
@@ -306,7 +310,16 @@ cmd_list() {
                | xargs -0 ls -t 2>/dev/null)
   done
 
-  if [[ $total -eq 0 ]]; then echo "No sessions found."; fi
+  if [[ $total -eq 0 ]]; then
+    echo "No sessions found."
+  else
+    local summary
+    summary="$(gray '─────')"
+    summary+="\n$(gray 'projects:') ${#project_encs[@]}  $(gray 'sessions:') ${total_sessions}"
+    [[ $total_agents -gt 0 ]] && summary+="  $(gray 'agents:') ${total_agents}"
+    [[ $total_active -gt 0 ]] && summary+="  $(green "${total_active} active")"
+    printf "\n%b\n" "$summary"
+  fi
 }
 
 cmd_delete() {
@@ -432,9 +445,94 @@ cmd_clean() {
   echo "Done."
 }
 
+cmd_thin() {
+  local max_msgs="${1:-}"
+  [[ -z "$max_msgs" || ! "$max_msgs" =~ ^[0-9]+$ ]] && { echo "Usage: claude-sessions thin <max-messages>"; exit 1; }
+
+  collect_active
+
+  # Collect matching files and their encoded project dirs (parallel arrays)
+  local to_delete=()
+  local to_delete_encs=()
+  local skipped=()
+
+  while IFS= read -r f; do
+    [[ -f "$f" ]] || continue
+    [[ "$f" == */subagents/* ]] && continue
+    local sid msg_count
+    sid=$(basename "$f" .jsonl)
+    msg_count=$(grep -c '"type":"user"' "$f" 2>/dev/null)
+    msg_count=${msg_count:-0}
+    [[ "$msg_count" -le "$max_msgs" ]] || continue
+    if is_active_session "$sid"; then
+      skipped+=("$f")
+    else
+      to_delete+=("$f")
+      to_delete_encs+=("$(basename "$(dirname "$f")")")
+    fi
+  done < <(find "$PROJECTS_DIR" -maxdepth 2 -name "*.jsonl" 2>/dev/null)
+
+  if [[ ${#skipped[@]} -gt 0 ]]; then
+    printf "$(red 'Skipping %d active session(s).')\\n\\n" "${#skipped[@]}"
+  fi
+
+  if [[ ${#to_delete[@]} -eq 0 ]]; then
+    echo "No sessions with ≤ $max_msgs messages found."
+    exit 0
+  fi
+
+  # Collect unique encoded dirs in order seen
+  local seen_encs=()
+  for enc in "${to_delete_encs[@]}"; do
+    local found=0
+    for s in "${seen_encs[@]+${seen_encs[@]}}"; do
+      [[ "$s" == "$enc" ]] && { found=1; break; }
+    done
+    [[ $found -eq 0 ]] && seen_encs+=("$enc")
+  done
+
+  # Print grouped by folder
+  for enc in "${seen_encs[@]}"; do
+    local project_dir
+    project_dir=$(echo "$enc" | sed 's|^-||; s|-|/|g')
+    local count=0
+    for e in "${to_delete_encs[@]}"; do [[ "$e" == "$enc" ]] && count=$((count+1)); done
+    local g_folder g_count
+    g_folder=$(gray '[folder]')
+    g_count=$(gray "(${count} session(s))")
+    printf "\n%s /%s  %s\n\n" "$g_folder" "$project_dir" "$g_count"
+    for i in "${!to_delete[@]}"; do
+      [[ "${to_delete_encs[$i]}" != "$enc" ]] && continue
+      local f="${to_delete[$i]}"
+      local name mc g_session g_msgs
+      name=$(session_name "$f")
+      mc=$(grep -c '"type":"user"' "$f" 2>/dev/null)
+      mc=${mc:-0}
+      g_session=$(gray '[session]')
+      g_msgs=$(gray "${mc} msgs")
+      printf "  %s %s  %s\n" "$g_session" "${name:-$(basename "$f" .jsonl)}" "$g_msgs"
+    done
+  done
+
+  echo ""
+  read -r -p "Delete ${#to_delete[@]} session(s)? [y/N] " confirm
+  [[ "$confirm" =~ ^[Yy]$ ]] || { echo "Cancelled."; exit 0; }
+
+  for i in "${!to_delete[@]}"; do
+    local f="${to_delete[$i]}" sid enc subagent_dir
+    sid=$(basename "$f" .jsonl)
+    enc="${to_delete_encs[$i]}"
+    subagent_dir="${PROJECTS_DIR}/${enc}/${sid}"
+    rm "$f"
+    [[ -d "$subagent_dir" ]] && rm -rf "$subagent_dir"
+  done
+  echo "Done."
+}
+
 case "${1:-}" in
   list|ls)        cmd_list ;;
   delete|rm|dl)   cmd_delete "${2:-}" ;;
   clean)          cmd_clean "${2:-}" ;;
+  thin)           cmd_thin "${2:-}" ;;
   *)              usage ;;
 esac
