@@ -49,23 +49,30 @@ session_metadata() {
   local file="$1"
   SM_NAME="" SM_SNIPPET="" SM_MSGS="0" SM_BRANCH="" SM_MODEL="" SM_TOKENS="" SM_DURATION="" SM_SIZE=""
 
-  # Single jq pass — extracts all fields, tab-separated
-  local raw ts_first ts_last out_tokens
-  raw=$(jq -rs '
-    [ (map(select(.type == "custom-title")) | first | .customTitle // ""),
-      (try (map(select(.type == "user")) | first
-        | (.message.content // []) | map(select(.type == "text")) | first | .text // ""
-        | gsub("[\n\r\t]"; " ") | .[0:80]) catch ""),
-      (map(select(.type == "user")) | length | tostring),
-      (map(select(.gitBranch != null)) | first | .gitBranch // ""),
-      (map(select(.type == "assistant")) | first | .message.model // ""),
-      ([.[] | select(.type == "assistant") | .message.usage.output_tokens // 0] | add // 0 | tostring),
-      (map(select(.timestamp != null)) | first | .timestamp // ""),
-      (map(select(.timestamp != null)) | last  | .timestamp // "")
-    ] | join("\u0001")
+  # Single jq pass — each field on its own line, read individually
+  # (avoids IFS/separator issues with arbitrary session content)
+  local ts_first ts_last out_tokens
+  {
+    IFS= read -r SM_NAME
+    IFS= read -r SM_SNIPPET
+    IFS= read -r SM_MSGS
+    IFS= read -r SM_BRANCH
+    IFS= read -r SM_MODEL
+    IFS= read -r out_tokens
+    IFS= read -r ts_first
+    IFS= read -r ts_last
+  } < <(jq -rs '
+    (map(select(.type == "custom-title")) | first | .customTitle // ""),
+    (try (map(select(.type == "user")) | first
+      | (.message.content // []) | map(select(.type == "text")) | first | .text // ""
+      | gsub("[\n\r\t]"; " ") | .[0:80]) catch ""),
+    (map(select(.type == "user")) | length | tostring),
+    (map(select(.gitBranch != null)) | first | .gitBranch // ""),
+    (map(select(.type == "assistant")) | first | .message.model // ""),
+    ([.[] | select(.type == "assistant") | .message.usage.output_tokens // 0] | add // 0 | tostring),
+    (map(select(.timestamp != null)) | first | .timestamp // ""),
+    (map(select(.timestamp != null)) | last  | .timestamp // "")
   ' "$file" 2>/dev/null)
-
-  IFS=$'\x01' read -r SM_NAME SM_SNIPPET SM_MSGS SM_BRANCH SM_MODEL out_tokens ts_first ts_last <<< "$raw"
   SM_MSGS=${SM_MSGS:-0}
 
   # Handle snippet fallback: if empty, try extracting command-name from raw content
@@ -493,8 +500,8 @@ cmd_thin() {
   local seen_encs=()
   for enc in "${to_delete_encs[@]}"; do
     local found=0
-    for s in "${seen_encs[@]+${seen_encs[@]}}"; do
-      [[ "$s" == "$enc" ]] && { found=1; break; }
+    for seen_enc in "${seen_encs[@]+${seen_encs[@]}}"; do
+      [[ "$seen_enc" == "$enc" ]] && { found=1; break; }
     done
     [[ $found -eq 0 ]] && seen_encs+=("$enc")
   done
