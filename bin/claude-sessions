@@ -3,16 +3,17 @@
 
 PROJECTS_DIR="${HOME}/.claude/projects"
 SESSIONS_DIR="${HOME}/.claude/sessions"
+FILE_HISTORY_DIR="${HOME}/.claude/file-history"
 
 usage() {
   cat <<EOF
 Usage: claude-sessions <command> [args]
 
 Commands:
-  list|ls           List all sessions (newest first)
-  delete|rm|dl <id> Delete session by ID (partial match ok)
-  clean <days>      Delete sessions older than N days
-  thin <msgs>       Delete sessions with ≤ N user messages
+  list|ls [--folders] List all sessions (newest first); --folders shows only project folders
+  delete|rm|dl <id>   Delete session by ID (partial match ok)
+  clean <days>        Delete sessions older than N days
+  thin <msgs>         Delete sessions with ≤ N user messages
 EOF
 }
 
@@ -101,6 +102,13 @@ session_metadata() {
     else                                SM_SIZE="${bytes}B"
     fi
   fi
+}
+
+# Remove file-history dir for a session ID (noop if absent)
+cleanup_file_history() {
+  local sid="$1"
+  local fh_dir="${FILE_HISTORY_DIR}/${sid}"
+  [[ -d "$fh_dir" ]] && rm -rf "$fh_dir"
 }
 
 # Single-field name lookup (used by cmd_delete and cmd_clean for display only)
@@ -200,6 +208,11 @@ is_active_session() {
 }
 
 cmd_list() {
+  local folders_only=0
+  for arg in "$@"; do
+    [[ "$arg" == "--folders" ]] && folders_only=1
+  done
+
   collect_active
 
   # Collect unique project dirs ordered by most recently active (first seen in global mtime sort)
@@ -242,7 +255,9 @@ cmd_list() {
     total_agents=$((total_agents + agent_count))
     total_active=$((total_active + active_count))
 
-    printf "\n$(gray "[folder]") /${project_dir}  $(gray "(${stats})")\n\n"
+    printf "\n$(gray "[folder]") /${project_dir}  $(gray "(${stats})")\n"
+    [[ $folders_only -eq 1 ]] && continue
+    echo ""
 
     # Sessions in this project sorted by mtime (includes subagents)
     while IFS= read -r file; do
@@ -295,7 +310,10 @@ cmd_list() {
                | xargs -0 ls -t 2>/dev/null)
   done
 
-  if [[ $total -eq 0 ]]; then
+  local displayed=$total
+  [[ $folders_only -eq 1 ]] && displayed=$total_sessions
+
+  if [[ $displayed -eq 0 ]]; then
     echo "No sessions found."
   else
     local summary
@@ -356,6 +374,7 @@ cmd_delete() {
   read -r -p "Confirm? [y/N] " confirm
   [[ "$confirm" =~ ^[Yy]$ ]] || { echo "Cancelled."; exit 0; }
   rm "$file"
+  cleanup_file_history "$session_id"
   # Remove subagent directory if it exists (and we're deleting a session)
   if [[ $is_agent -eq 0 && -d "$subagent_dir" ]]; then
     rm -rf "$subagent_dir"
@@ -408,8 +427,12 @@ cmd_clean() {
   read -r -p "Delete ${#to_delete[@]} session(s)? [y/N] " confirm
   [[ "$confirm" =~ ^[Yy]$ ]] || { echo "Cancelled."; exit 0; }
 
-  # Safe deletion: null-separated, no word splitting
-  printf '%s\0' "${to_delete[@]}" | xargs -0 rm
+  for f in "${to_delete[@]}"; do
+    local sid
+    sid=$(basename "$f" .jsonl)
+    rm "$f"
+    cleanup_file_history "$sid"
+  done
 
   # Remove orphaned subagent directories (parent .jsonl gone)
   # These are dirs at depth 2: projects/<enc>/<session-id>/
@@ -510,13 +533,14 @@ cmd_thin() {
     enc="${to_delete_encs[$i]}"
     subagent_dir="${PROJECTS_DIR}/${enc}/${sid}"
     rm "$f"
+    cleanup_file_history "$sid"
     [[ -d "$subagent_dir" ]] && rm -rf "$subagent_dir"
   done
   echo "Done."
 }
 
 case "${1:-}" in
-  list|ls)        cmd_list ;;
+  list|ls)        cmd_list "${@:2}" ;;
   delete|rm|dl)   cmd_delete "${2:-}" ;;
   clean)          cmd_clean "${2:-}" ;;
   thin)           cmd_thin "${2:-}" ;;
