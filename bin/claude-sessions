@@ -489,13 +489,14 @@ cmd_thin() {
     for i in "${!to_delete[@]}"; do
       [[ "${to_delete_encs[$i]}" != "$enc" ]] && continue
       local f="${to_delete[$i]}"
-      local name mc g_session g_msgs
+      local name mc rel_time g_session g_meta
       name=$(session_name "$f")
       mc=$(grep -c '"type":"user"' "$f" 2>/dev/null)
       mc=${mc:-0}
+      rel_time=$(file_rel_time "$f")
       g_session=$(gray '[session]')
-      g_msgs=$(gray "${mc} msgs")
-      printf "  %s %s  %s\n" "$g_session" "${name:-$(basename "$f" .jsonl)}" "$g_msgs"
+      g_meta=$(gray "${mc} msgs · ${rel_time}")
+      printf "  %s %s  %s\n" "$g_session" "${name:-$(basename "$f" .jsonl)}" "$g_meta"
     done
   done
 
