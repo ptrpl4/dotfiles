@@ -48,55 +48,40 @@ session_metadata() {
   local file="$1"
   SM_NAME="" SM_SNIPPET="" SM_MSGS="0" SM_BRANCH="" SM_MODEL="" SM_TOKENS="" SM_DURATION="" SM_SIZE=""
 
-  local custom_title first_user_line branch_line model_line
-  custom_title=$(grep -m1 '"type":"custom-title"' "$file" 2>/dev/null)
-  first_user_line=$(grep -m1 '"type":"user"' "$file" 2>/dev/null)
-  branch_line=$(grep -m1 '"gitBranch"' "$file" 2>/dev/null)
-  model_line=$(grep -m1 '"type":"assistant"' "$file" 2>/dev/null)
+  # Single jq pass — extracts all fields, tab-separated
+  local raw ts_first ts_last out_tokens
+  raw=$(jq -rs '
+    [ (map(select(.type == "custom-title")) | first | .customTitle // ""),
+      (map(select(.type == "user")) | first
+        | (.message.content // []) | map(select(.type == "text")) | first | .text // ""
+        | gsub("[\n\r]"; " ") | .[0:80]),
+      (map(select(.type == "user")) | length | tostring),
+      (map(select(.gitBranch != null)) | first | .gitBranch // ""),
+      (map(select(.type == "assistant")) | first | .message.model // ""),
+      ([.[] | select(.type == "assistant") | .message.usage.output_tokens // 0] | add // 0 | tostring),
+      (map(select(.timestamp != null)) | first | .timestamp // ""),
+      (map(select(.timestamp != null)) | last  | .timestamp // "")
+    ] | join("\t")
+  ' "$file" 2>/dev/null)
 
-  if [[ -n "$custom_title" ]]; then
-    SM_NAME=$(printf '%s' "$custom_title" | jq -r '.customTitle // ""' 2>/dev/null)
+  IFS=$'\t' read -r SM_NAME SM_SNIPPET SM_MSGS SM_BRANCH SM_MODEL out_tokens ts_first ts_last <<< "$raw"
+  SM_MSGS=${SM_MSGS:-0}
+
+  # Handle snippet fallback: if empty, try extracting command-name from raw content
+  if [[ -z "${SM_SNIPPET// }" ]]; then
+    local cmd
+    cmd=$(grep -m1 '<command-name>' "$file" 2>/dev/null | grep -o '<command-name>[^<]*</command-name>' | sed 's|<[^>]*>||g')
+    SM_SNIPPET="$cmd"
   fi
+  SM_SNIPPET="${SM_SNIPPET:0:80}"
 
-  if [[ -n "$first_user_line" ]]; then
-    local raw
-    raw=$(printf '%s' "$first_user_line" \
-      | jq -r '(.message.content // []) | map(select(.type == "text")) | .[0].text // ""' 2>/dev/null \
-      | tr '\n' ' ')
-    if [[ -z "${raw// }" ]]; then
-      raw=$(printf '%s' "$first_user_line" \
-        | grep -o '<command-name>[^<]*</command-name>' \
-        | sed 's|<[^>]*>||g')
-    fi
-    SM_SNIPPET=$(echo "$raw" | cut -c1-80)
-  fi
-
-  SM_MSGS=$(grep -c '"type":"user"' "$file" 2>/dev/null || echo "0")
-
-  if [[ -n "$branch_line" ]]; then
-    SM_BRANCH=$(printf '%s' "$branch_line" | jq -r '.gitBranch // ""' 2>/dev/null)
-  fi
-
-  if [[ -n "$model_line" ]]; then
-    SM_MODEL=$(printf '%s' "$model_line" | jq -r '.message.model // ""' 2>/dev/null)
-  fi
-
-  # Token totals across all assistant messages (output tokens only — most meaningful for cost)
-  local out_tokens
-  out_tokens=$(grep '"type":"assistant"' "$file" 2>/dev/null \
-    | jq -r '.message.usage.output_tokens // 0' 2>/dev/null \
-    | awk '{s+=$1} END {print s+0}')
   [[ "$out_tokens" =~ ^[0-9]+$ && "$out_tokens" -gt 0 ]] && SM_TOKENS="$out_tokens"
 
-  # Duration: first to last non-null timestamp (one file scan, split for head/tail)
-  local ts_first ts_last ts_lines
-  ts_lines=$(grep -o '"timestamp":"[^"]*"' "$file" 2>/dev/null | sed 's/"timestamp":"//;s/"//')
-  ts_first=$(echo "$ts_lines" | head -1)
-  ts_last=$(echo "$ts_lines" | tail -1)
+  # Duration from timestamps
   if [[ -n "$ts_first" && -n "$ts_last" && "$ts_first" != "$ts_last" ]]; then
     local t1 t2 diff
-    t1=$(date -d "$ts_first" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${ts_first%%.*}" +%s 2>/dev/null)
-    t2=$(date -d "$ts_last"  +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${ts_last%%.*}"  +%s 2>/dev/null)
+    t1=$(date -jf "%Y-%m-%dT%H:%M:%S" "${ts_first%%.*}" +%s 2>/dev/null)
+    t2=$(date -jf "%Y-%m-%dT%H:%M:%S" "${ts_last%%.*}"  +%s 2>/dev/null)
     if [[ -n "$t1" && -n "$t2" ]]; then
       diff=$(( t2 - t1 ))
       if   [[ $diff -ge 86400 ]]; then SM_DURATION="$(( diff/86400 ))d $(( (diff%86400)/3600 ))h"
@@ -107,9 +92,9 @@ session_metadata() {
     fi
   fi
 
-  # File size (human readable)
+  # File size via stat (macOS)
   local bytes
-  bytes=$(wc -c < "$file" 2>/dev/null | tr -d ' ')
+  bytes=$(stat -f%z "$file" 2>/dev/null)
   if [[ "$bytes" =~ ^[0-9]+$ && "$bytes" -gt 0 ]]; then
     if   [[ $bytes -ge 1048576 ]]; then SM_SIZE="$(( bytes/1048576 ))MB"
     elif [[ $bytes -ge 1024    ]]; then SM_SIZE="$(( bytes/1024 ))KB"
