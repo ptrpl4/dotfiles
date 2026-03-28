@@ -16,7 +16,7 @@ Commands:
 EOF
 }
 
-# Cross-platform: sort .jsonl files by modification time, newest first
+# Sort .jsonl files by modification time, newest first
 # maxdepth 4 includes subagent files: projects/<enc>/<session-id>/subagents/<agent-id>.jsonl
 sorted_sessions() {
   find "$PROJECTS_DIR" -maxdepth 4 -name "*.jsonl" -print0 \
@@ -113,14 +113,14 @@ session_name() {
 # Relative time from file mtime: "2h ago", "3 days ago", etc.
 file_rel_time() {
   local mtime now diff
-  mtime=$(date -r "$1" +%s 2>/dev/null) || return
+  mtime=$(stat -f%m "$1" 2>/dev/null) || return
   now=$(date +%s)
   diff=$(( now - mtime ))
   if   [[ $diff -lt 60     ]]; then echo "just now"
   elif [[ $diff -lt 3600   ]]; then echo "$(( diff/60 ))m ago"
   elif [[ $diff -lt 86400  ]]; then echo "$(( diff/3600 ))h ago"
   elif [[ $diff -lt 604800 ]]; then echo "$(( diff/86400 )) days ago"
-  else                               echo "$(date -r "$1" +"%Y-%m-%d" 2>/dev/null)"
+  else                               date -jf "%s" "$mtime" +"%Y-%m-%d" 2>/dev/null
   fi
 }
 
