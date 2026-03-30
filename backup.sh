@@ -114,7 +114,7 @@ backup_obsidian() {
   local vaults
   vaults=$(grep -o '"path":"[^"]*"' "$obsidian_config" | cut -d'"' -f4)
 
-  for vault_path in $vaults; do
+  while IFS= read -r vault_path; do
     local vault_name
     vault_name=$(basename "$vault_path")
     local obsidian_dir="${vault_path}/.obsidian"
@@ -125,7 +125,7 @@ backup_obsidian() {
     mkdir -p "${dest}"
     cp -R "$obsidian_dir" "${dest}/"
     echo "Backed up Obsidian vault: ${vault_name}"
-  done
+  done <<< "$vaults"
 }
 
 # copy list of installed apps

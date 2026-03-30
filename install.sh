@@ -9,7 +9,7 @@ mkdir -p "${backup_dir}"
 echo "Backup dir created"
 
 # List of files/folders to symlink in ${HOME}
-files=(zshrc zprompt zprofile bashrc bash_prompt bash_profile aliases private gitconfig)
+files=(zshrc zprompt zprofile zshenv bashrc bash_prompt bash_profile aliases private gitconfig prompt_common)
 
 # dotfiles directory
 dotfiles_dir="${HOME}/dotfiles"
@@ -37,7 +37,7 @@ done
 # macOS app settings
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Rectangle
-  mkdir -p ~/Library/Application\ Support/Rectangle && cp settings/rectangle/RectangleConfig.json ~/Library/Application\ Support/Rectangle/RectangleConfig.json
+  mkdir -p "${HOME}/Library/Application Support/Rectangle" && cp settings/rectangle/RectangleConfig.json "${HOME}/Library/Application Support/Rectangle/RectangleConfig.json"
 fi
 
 # link Zed settings (profile defined in .private: "work" or "home")

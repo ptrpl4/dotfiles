@@ -4,7 +4,7 @@ if [[ -n $PROFILE_STARTUP ]]; then
 fi
 
 # Start time measurement with millisecond precision
-shell_start_time=$(perl -MTime::HiRes=time -e 'printf "%.0f\n", time * 1000')
+shell_start_time=$(( EPOCHREALTIME * 1000 ))
 
 # Load colors func.
 autoload -Uz colors && colors
@@ -35,8 +35,8 @@ unset file
 
 # Calculate and display the startup time (styled to match prompt)
 if [[ -o interactive ]]; then
-  shell_end_time=$(perl -MTime::HiRes=time -e 'printf "%.0f\n", time * 1000')
-  shell_load_time=$((shell_end_time - shell_start_time))
+  shell_end_time=$(( EPOCHREALTIME * 1000 ))
+  shell_load_time=$(( shell_end_time - shell_start_time ))
 
   # Colors matching prompt theme
   gray=$(tput setaf 8)
