@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 # Create the backup directory if it doesn't exist
 current_date=$(date +%Y-%m-%d)
 backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/${current_date}"
@@ -20,7 +19,7 @@ cd "${dotfiles_dir}" || exit
 
 for file in "${files[@]}"; do
     # Check if the file already exists in the home directory
-    if [ -e "${HOME}/.${file}" ]; then
+    if [[ -e "${HOME}/.${file}" ]]; then
         echo "Backing up $file"
         # Backup the file to the backup directory
         cp "${HOME}/.${file}" "${backup_dir}/"
@@ -44,7 +43,7 @@ fi
 if command -v zed >/dev/null 2>&1; then
   echo "Zed detected. Proceeding with settings handling."
 
-  if [ -f "${HOME}/.config/zed/settings.json" ]; then
+  if [[ -f "${HOME}/.config/zed/settings.json" ]]; then
     echo "Backing up Zed settings"
     mkdir -p "${backup_dir}/.config/zed" && \
     cp "${HOME}/.config/zed/settings.json" "${backup_dir}/.config/zed/"
@@ -65,13 +64,13 @@ fi
 
 # link other Run Commands
 
-if [ -f "${dotfiles_dir}/.netrc" ]; then
+if [[ -f "${dotfiles_dir}/.netrc" ]]; then
   ln -sf "${dotfiles_dir}/.netrc" "${HOME}/.netrc"
 else
   echo ".netrc not found in dotfiles, skipping"
 fi
 
-if [ -f "${dotfiles_dir}/.npmrc" ]; then
+if [[ -f "${dotfiles_dir}/.npmrc" ]]; then
   ln -sf "${dotfiles_dir}/.npmrc" "${HOME}/.npmrc"
 else
   echo ".npmrc not found in dotfiles, skipping"

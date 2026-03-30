@@ -10,27 +10,21 @@ prompt_time() {
     printf "%b─[%b%s%b:%b%s%b]" "${gray}" "${reset}" "$h" "${gray}" "${reset}" "$m" "${gray}"
 }
 
-
-
 # Box drawing style git prompt with colors (optimized)
 prompt_git_box() {
-    # Quick check if in git repo (single call)
     git rev-parse --is-inside-work-tree &>/dev/null || return
 
     local git_status=''
     local branchName=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo '(unknown)')
 
-    # Convert to lowercase (compatible with bash 3.2+)
-    if [ -n "$ZSH_VERSION" ]; then
+    if [[ -n "$ZSH_VERSION" ]]; then
         branchName=${branchName:l}
     else
         branchName=$(echo "$branchName" | tr '[:upper:]' '[:lower:]')
     fi
 
-    # Check ahead/behind remote (combine into single git call)
     local upstream=$(git rev-parse --abbrev-ref @{upstream} 2>/dev/null)
     if [[ -n "$upstream" ]]; then
-        # Use read instead of awk to parse (faster, no subprocess)
         local ahead_behind=$(git rev-list --left-right --count HEAD...@{upstream} 2>/dev/null)
         local ahead=${ahead_behind%%[[:space:]]*}
         local behind=${ahead_behind##*[[:space:]]}
@@ -40,49 +34,38 @@ prompt_git_box() {
         [[ "$behind" -gt 0 ]] && git_status+="↓${behind}"
         [[ "$ahead" -gt 0 ]] && git_status+="↑${ahead}"
 
-        # Show up-to-date indicator if in sync with remote
         if [[ "$ahead" -eq 0 ]] && [[ "$behind" -eq 0 ]]; then
             git_status+="✓"
         fi
     fi
 
-    [ -n "${git_status}" ] && git_status="${gray}:${reset}${git_status}"
+    [[ -n "${git_status}" ]] && git_status="${gray}:${reset}${git_status}"
 
     printf "%b─[%bgit%b:%b%s%s%b]" "${gray}" "${reset}" "${gray}" "${reset}" "${branchName}" "${git_status}" "${gray}"
 }
 
-# Command execution time
-# Zsh preexec hook
+# Zsh preexec hook — record time before each command
 preexec() {
-    timer=$(perl -MTime::HiRes=time -e 'printf "%.0f\n", time * 1000')
+    timer=$SECONDS
 }
 
-# Improved Bash preexec support
-if [ -n "$BASH_VERSION" ]; then
+# Bash preexec support via DEBUG trap
+if [[ -n "$BASH_VERSION" ]]; then
     __prompt_command() {
         local exit_code=$?
-        # Save exit code for prompt
         LAST_EXIT_CODE=$exit_code
-        # Clear the preexec flag
         __preexec_invoked=
         return $exit_code
     }
 
     __debug_trap() {
-        # Skip if already invoked for this command
-        [ -n "$__preexec_invoked" ] && return
-
-        # Skip if BASH_COMMAND is empty or just whitespace
+        [[ -n "$__preexec_invoked" ]] && return
         [[ -z "${BASH_COMMAND// }" ]] && return
-
-        # Filter out internal commands that shouldn't be timed
         case "$BASH_COMMAND" in
             __prompt_command*|__debug_trap*|'return '*) return ;;
             *'PROMPT_COMMAND'*) return ;;
         esac
-
-        # Start timer for user command
-        timer=$(perl -MTime::HiRes=time -e 'printf "%.0f\n", time * 1000')
+        timer=$SECONDS
         __preexec_invoked=1
     }
 
@@ -90,23 +73,21 @@ if [ -n "$BASH_VERSION" ]; then
     PROMPT_COMMAND='__prompt_command'
 fi
 
-# Zsh precmd hook for exit code
-if [ -n "$ZSH_VERSION" ]; then
+# Zsh precmd hook — capture exit code after each command
+if [[ -n "$ZSH_VERSION" ]]; then
     precmd() {
         local exit_code=$?
-        # Save exit code for prompt
         LAST_EXIT_CODE=$exit_code
         return $exit_code
     }
 fi
 
+# Show elapsed seconds if command took >= 1s
 prompt_exec_time_box() {
-    if [ -n "$timer" ]; then
-        local now=$(perl -MTime::HiRes=time -e 'printf "%.0f\n", time * 1000')
-        local elapsed=$(($now-$timer))
-        if [ $elapsed -gt 1000 ]; then
-            local elapsed_sec=$(($elapsed/1000))
-            printf "%b─[%b${elapsed_sec}s%b]" "${gray}" "${reset}" "${gray}"
+    if [[ -n "$timer" ]]; then
+        local elapsed=$(( SECONDS - timer ))
+        if [[ $elapsed -gt 0 ]]; then
+            printf "%b─[%b%ds%b]" "${gray}" "${reset}" "${elapsed}" "${gray}"
         fi
         unset timer
     fi
@@ -119,15 +100,11 @@ prompt_exit_status() {
     fi
 }
 
-# Background jobs indicator (optimized)
+# Background jobs indicator
 prompt_jobs_box() {
-    # Use shell builtin instead of subprocess
     local job_count=$(jobs -p 2>/dev/null | wc -l)
-    # Remove whitespace using parameter expansion instead of tr
     job_count=${job_count// /}
     if [[ $job_count -gt 0 ]]; then
         printf "%b─[%bjobs %d%b]" "${gray}" "${reset}" "${job_count}" "${gray}"
     fi
 }
-
-

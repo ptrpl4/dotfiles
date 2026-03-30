@@ -1,6 +1,6 @@
 # Set PATHS and Completions
 ## Brew
-if [ -x "/opt/homebrew/bin/brew" ]; then
+if [[ -x "/opt/homebrew/bin/brew" ]]; then
     # For Apple Silicon Macs
     export PATH="/opt/homebrew/bin:$PATH"
     export PATH="/opt/homebrew/sbin:$PATH"
@@ -12,7 +12,7 @@ export PATH=$PATH:$ANDROID_HOME/emulator
 
 ## Brew Completions
 if command -v brew &>/dev/null; then
-  FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+  FPATH="/opt/homebrew/share/zsh/site-functions:${FPATH}"
 fi
 
 ## Node Version Manager
@@ -20,7 +20,7 @@ fi
 # Lazy load full NVM (nvm use, nvm install, etc.) — only when nvm command is called
 _nvm_load() {
   unfunction nvm node npm npx pnpm _nvm_load 2>/dev/null
-  if [ -s "$NVM_DIR/nvm.sh" ]; then
+  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
     . "$NVM_DIR/nvm.sh"
   else
     echo "Warning: nvm not found at $NVM_DIR/nvm.sh" >&2
@@ -38,12 +38,7 @@ pnpm() { _nvm_load && pnpm "$@"; }
 if [[ -d /Applications/Docker.app ]] || [[ -d ~/.docker/bin ]] || [[ -f /usr/local/bin/docker ]]; then
   export PATH="$HOME/.docker/bin:$PATH" # custom docker installation
 
-  ### Add custom Docker completion directory to fpath
-  if [[ -d ~/.docker/completions ]]; then
-    fpath=(~/.docker/completions $fpath)
-  else
-    echo "Warning: Docker completions directory not found at ~/.docker/completions"
-  fi
+  [[ -d ~/.docker/completions ]] && fpath=(~/.docker/completions $fpath)
 fi
 
 ## VSCode
