@@ -25,6 +25,10 @@ settings/obsidian/default/plugins/*/main.js
 settings/obsidian/default/plugins/*/styles.css
 settings/obsidian/default/plugins/*/*.sh
 
+# Markdown notes (keep only README and repo-level docs)
+*.md
+!README.md
+
 # llm
 
 .claude

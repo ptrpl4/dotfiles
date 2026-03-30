@@ -3,9 +3,12 @@ paths:
   - "**/*.sh"
   - "**/.aliases"
   - "**/.bashrc"
+  - "**/.bash_prompt"
   - "**/.zshrc"
   - "**/.zprofile"
   - "**/.zshenv"
+  - "**/.zprompt"
+  - "**/.prompt_common"
 ---
 
 # Shell File Rules

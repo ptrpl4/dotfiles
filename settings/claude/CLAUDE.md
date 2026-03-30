@@ -24,6 +24,11 @@
 - Check project's packageManager field or lock files to determine which package manager to use
 - Check ~/.dotfiles/ if some installed tools are not running
 
+## Permissions & Access
+- On first session in a new project, suggest setting up `.claude/settings.json` with project-specific allowed tools — analyze what commands will likely be needed (build tools, linters, test runners, CLI tools) and propose an `allow` list to avoid repeated permission prompts
+- During a project, if the same command type is approved more than twice, suggest adding it to `.claude/settings.json`
+- Remind the user to add `.claude/settings.local.json` to `.gitignore` if it contains machine-specific paths
+
 ## Code Changes
 - Do not modify unrelated code — stay focused on the task
 - Do not add comments or docstrings to code that was not changed in this task

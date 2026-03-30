@@ -1,11 +1,24 @@
 {
   "permissions": {
-    "allow": [],
-    "defaultMode": "acceptEdits"
+    "allow": [
+      "Skill(keybindings-help)",
+      "WebFetch(domain:github.com)",
+      "Bash(git status)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(jq:*)",
+      "Bash(chmod +x:*)"
+    ]
   },
   "statusLine": {
     "type": "command",
     "command": "bash $HOME/.claude/statusline-command.sh"
   },
-  "autoUpdatesChannel": "latest"
+  "enabledPlugins": {
+    "swift-lsp@claude-plugins-official": true
+  },
+  "autoUpdatesChannel": "stable",
+  "minimumVersion": "2.1.81"
 }
