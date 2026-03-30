@@ -28,6 +28,7 @@ settings/obsidian/default/plugins/*/*.sh
 # Markdown notes (keep only README and repo-level docs)
 *.md
 !README.md
+!settings/**/*/*.md
 
 # llm
 
