@@ -17,22 +17,25 @@ fi
 
 ## Node Version Manager
 # NVM_DIR and default node PATH are set in .zshenv (sourced for all shells).
-# Lazy load full NVM (nvm use, nvm install, etc.) — only when nvm command is called
-_nvm_load() {
-  unfunction nvm node npm npx pnpm _nvm_load 2>/dev/null
-  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
-    . "$NVM_DIR/nvm.sh"
-  else
-    echo "Warning: nvm not found at $NVM_DIR/nvm.sh" >&2
-    return 1
-  fi
-}
+# Lazy load full NVM only in interactive shells — non-interactive shells
+# (CI, IDE subprocesses, Claude Code Bash tool) already have node on PATH via .zshenv.
+if [[ -o interactive ]]; then
+  _nvm_load() {
+    unfunction nvm node npm npx pnpm _nvm_load 2>/dev/null
+    if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+      . "$NVM_DIR/nvm.sh"
+    else
+      echo "Warning: nvm not found at $NVM_DIR/nvm.sh" >&2
+      return 1
+    fi
+  }
 
-nvm()  { _nvm_load && nvm  "$@"; }
-node() { _nvm_load && node "$@"; }
-npm()  { _nvm_load && npm  "$@"; }
-npx()  { _nvm_load && npx  "$@"; }
-pnpm() { _nvm_load && pnpm "$@"; }
+  nvm()  { _nvm_load && nvm  "$@"; }
+  node() { _nvm_load && node "$@"; }
+  npm()  { _nvm_load && npm  "$@"; }
+  npx()  { _nvm_load && npx  "$@"; }
+  pnpm() { _nvm_load && pnpm "$@"; }
+fi
 
 ## Docker
 if [[ -d /Applications/Docker.app ]] || [[ -d ~/.docker/bin ]] || [[ -f /usr/local/bin/docker ]]; then
