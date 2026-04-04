@@ -4,7 +4,7 @@
 - Never add Co-Authored-By lines to commits
 - Never commit without user approval
 - Never push without user approval
-- Keep commit subject line under 50 characters
+- Keep commit subject line short
 
 ## Code Style
 - On first session in a new project, check for existing linter/formatter configs before assuming style
@@ -22,7 +22,7 @@
 
 ## ENV
 - Check project's packageManager field or lock files to determine which package manager to use
-- Check ~/.dotfiles/ if some installed tools are not running
+- Check ~/dotfiles/ if some installed tools are not running
 
 ## Permissions & Access
 - On first session in a new project, suggest setting up `.claude/settings.json` with project-specific allowed tools — analyze what commands will likely be needed (build tools, linters, test runners, CLI tools) and propose an `allow` list to avoid repeated permission prompts
