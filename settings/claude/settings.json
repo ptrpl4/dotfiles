@@ -9,17 +9,18 @@
       "Bash(git branch:*)",
       "Bash(git add:*)",
       "Bash(jq:*)",
-      "Bash(chmod +x:*)"
-    ]
+      "Bash(chmod +x:*)",
+      "Read(~/.claude/**)",
+      "Read(**/.claude/**)"
+    ],
+    "defaultMode": "acceptEdits"
   },
   "statusLine": {
     "type": "command",
     "command": "bash $HOME/.claude/statusline-command.sh"
   },
-  "enabledPlugins": {
-    "swift-lsp@claude-plugins-official": true
-  },
-  "effortLevel": "medium",
+  "spinnerTipsEnabled": false,
   "autoUpdatesChannel": "latest",
-  "minimumVersion": "2.1.81"
+  "minimumVersion": "2.1.81",
+  "prefersReducedMotion": true
 }

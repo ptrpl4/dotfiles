@@ -37,6 +37,21 @@
 - If the plan turns out wrong mid-execution, stop and re-confirm rather than self-correct silently
 - Do not delete or overwrite unfamiliar files — they may be in-progress work
 
+## Model & Effort
+Default is `/effort auto` — Claude selects effort per task. Override with `/model` or `/effort` when needed.
+
+| Task type | Model | Effort |
+|---|---|---|
+| Routine edits, renames, formatting | sonnet | low |
+| Most tasks (default) | sonnet | auto |
+| Feature work, debugging | sonnet/opus | auto |
+| Architecture, complex multi-file | opus | high |
+| Research, exploration, planning | opus | high |
+
+- When context window fills up: use `/compact` before continuing
+- Check spend with `/cost`, plan limits with `/usage`
+- Avoid: `opus/low` (expensive model, minimum thinking), `haiku/high` (effort ceiling on cheapest model)
+
 ## Context & Tokens
 - Keep responses lean — share key information, not exhaustive detail unless asked
 - Do not use emoji in output unless the task explicitly involves them

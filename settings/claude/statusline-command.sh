@@ -65,12 +65,27 @@ fi
 model=$(echo "$input" | jq -r '.model.display_name // empty' 2>/dev/null)
 seg "$model"
 
-# Effort level (read from settings.json; low→lo, medium→med, high→hi)
+# Model+effort combo — flag suboptimal pairings with !
 effort=$(jq -r '.effortLevel // empty' "$HOME/.claude/settings.json" 2>/dev/null)
+effort_label=""
 case "$effort" in
-    low)    seg "lo" ;;
-    medium) seg "med" ;;
-    high)   seg "hi" ;;
+    low)    effort_label="lo" ;;
+    medium) effort_label="med" ;;
+    high)   effort_label="hi" ;;
+    max)    effort_label="max" ;;
+    auto)   effort_label="auto" ;;
 esac
+
+if [[ -n "$effort_label" && -n "$model" ]]; then
+    model_lc=$(echo "$model" | tr '[:upper:]' '[:lower:]')
+    warn=""
+    # opus/low: paying top price for minimum thinking
+    [[ "$model_lc" == *opus* && "$effort" == "low" ]] && warn="!"
+    # haiku/high or haiku/max: effort ceiling on cheapest model
+    [[ "$model_lc" == *haiku* && ( "$effort" == "high" || "$effort" == "max" ) ]] && warn="!"
+    seg "${effort_label}${warn}"
+elif [[ -n "$effort_label" ]]; then
+    seg "$effort_label"
+fi
 
 printf "%b\n" "$reset"
