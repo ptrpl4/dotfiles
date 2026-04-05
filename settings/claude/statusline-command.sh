@@ -18,9 +18,6 @@ h=$(date +"%H")
 m=$(date +"%M")
 printf "%b─[%b%s%b:%b%s%b]" "$gray" "$reset" "$h" "$gray" "$reset" "$m" "$gray"
 
-# User
-seg "$(whoami)"
-
 # Directory (basename, matches %c)
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd' 2>/dev/null)
 seg "$(basename "$cwd")"
@@ -56,12 +53,24 @@ fi
 
 # ── Claude-specific segments ─────────────────────────────────────────────────
 
+# Context: compute used tokens from percentage * window size
+ctx_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)
+ctx_size=$(echo "$input" | jq -r '.context_window.context_window_size // empty' 2>/dev/null)
+if [[ -n "$ctx_pct" && -n "$ctx_size" ]]; then
+    ctx_str=$(awk "BEGIN{used=int($ctx_pct/100*$ctx_size/1000); total=int($ctx_size/1000); printf \"%dk/%dk\", used, total}")
+    seg "ctx $ctx_str"
+fi
+
 # Model
 model=$(echo "$input" | jq -r '.model.display_name // empty' 2>/dev/null)
 seg "$model"
 
-# Context used %
-ctx_used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)
-[[ -n "$ctx_used_pct" ]] && seg "ctx $(printf '%.0f' "$ctx_used_pct")%"
+# Effort level (read from settings.json; low→lo, medium→med, high→hi)
+effort=$(jq -r '.effortLevel // empty' "$HOME/.claude/settings.json" 2>/dev/null)
+case "$effort" in
+    low)    seg "lo" ;;
+    medium) seg "med" ;;
+    high)   seg "hi" ;;
+esac
 
 printf "%b\n" "$reset"
