@@ -67,6 +67,11 @@ if command -v zed &>/dev/null; then
   export VISUAL="zed --wait"
 fi
 
+## Python (Homebrew, keg-only)
+if [[ -d "/opt/homebrew/opt/python@3.13" ]]; then
+  export PATH="/opt/homebrew/opt/python@3.13/libexec/bin:$PATH"
+fi
+
 ## local binaries (pipx, poetry, etc.)
 export PATH="$HOME/.local/bin:$PATH"
 

@@ -108,6 +108,11 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   sudo pmset -a lessbright 0 # rollback - sudo pmset -b lessbright 1
 fi
 
+# install Homebrew packages from Brewfile
+if command -v brew &>/dev/null && [[ -f "${dotfiles_dir}/Brewfile" ]]; then
+  brew bundle install --file="${dotfiles_dir}/Brewfile" --no-upgrade || true
+fi
+
 # link Claude Code config
 claude_dir="${HOME}/.claude"
 mkdir -p "${claude_dir}"
