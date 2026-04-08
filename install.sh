@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
 # Create the backup directory if it doesn't exist
-current_date=$(date +%Y-%m-%d)
-backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/${current_date}"
+install_backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/$(date +%Y-%m-%d)"
 
-mkdir -p "${backup_dir}"
+mkdir -p "${install_backup_dir}"
 echo "Backup dir created"
 
 # List of files/folders to symlink in ${HOME}
@@ -13,21 +12,22 @@ files=(zshrc zprompt zprofile zshenv bashrc bash_prompt bash_profile aliases pri
 # dotfiles directory
 dotfiles_dir="${HOME}/dotfiles"
 
-# change to the dotfiles directory
-echo "Changing to the ${dotfiles_dir} directory"
-cd "${dotfiles_dir}" || exit
-
 for file in "${files[@]}"; do
-    # Check if the file already exists in the home directory
-    if [[ -e "${HOME}/.${file}" ]]; then
-        echo "Backing up $file"
-        # Backup the file to the backup directory
-        cp "${HOME}/.${file}" "${backup_dir}/"
+    if [[ ! -e "${dotfiles_dir}/.${file}" ]]; then
+        echo "Skipping $file (not found in dotfiles)"
+        continue
     fi
 
-    echo "Creating symlink to $file in home directory"
-    # Create the symlink
-    ln -sf "${dotfiles_dir}/.${file}" "${HOME}/.${file}"
+    if [[ -e "${HOME}/.${file}" ]]; then
+        echo "Backing up $file"
+        cp "${HOME}/.${file}" "${install_backup_dir}/"
+    fi
+
+    if ln -sf "${dotfiles_dir}/.${file}" "${HOME}/.${file}"; then
+        echo "Linked $file"
+    else
+        echo "Warning: failed to link $file" >&2
+    fi
 done
 
 # Source .private for machine-specific variables (ZED_PROFILE, OBSIDIAN_VAULTS)
@@ -36,7 +36,8 @@ done
 # macOS app settings
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Rectangle
-  mkdir -p "${HOME}/Library/Application Support/Rectangle" && cp settings/rectangle/RectangleConfig.json "${HOME}/Library/Application Support/Rectangle/RectangleConfig.json"
+  mkdir -p "${HOME}/Library/Application Support/Rectangle"
+  ln -sf "${dotfiles_dir}/settings/rectangle/RectangleConfig.json" "${HOME}/Library/Application Support/Rectangle/RectangleConfig.json"
 fi
 
 # link Zed settings (profile defined in .private: "work" or "home")
@@ -45,14 +46,18 @@ if command -v zed >/dev/null 2>&1; then
 
   if [[ -f "${HOME}/.config/zed/settings.json" ]]; then
     echo "Backing up Zed settings"
-    mkdir -p "${backup_dir}/.config/zed" && \
-    cp "${HOME}/.config/zed/settings.json" "${backup_dir}/.config/zed/"
+    if mkdir -p "${install_backup_dir}/.config/zed"; then
+      cp "${HOME}/.config/zed/settings.json" "${install_backup_dir}/.config/zed/"
+    else
+      echo "Warning: failed to create Zed backup dir" >&2
+    fi
   else
     echo "No Zed settings.json found; skipping backup."
   fi
 
   zed_settings="${dotfiles_dir}/settings/zed/settings-${ZED_PROFILE:-home}.json"
   if [[ -f "$zed_settings" ]]; then
+    mkdir -p "${HOME}/.config/zed"
     ln -sf "$zed_settings" "${HOME}/.config/zed/settings.json" && \
     echo "Zed symlink created (profile: ${ZED_PROFILE:-home})"
   else
@@ -79,18 +84,26 @@ fi
 # macOS system settings
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Dock
+  dock_before=$(defaults export com.apple.dock - 2>/dev/null | md5 -q)
   defaults write com.apple.dock "autohide-delay" -float "0"
   defaults write com.apple.dock "static-only" -bool "true"
   defaults write com.apple.dock autohide -bool true
   defaults write com.apple.dock launchanim -bool false
   defaults write com.apple.dock show-recents -bool false
-  killall Dock
+  dock_after=$(defaults export com.apple.dock - 2>/dev/null | md5 -q)
+  [[ "$dock_before" != "$dock_after" ]] && killall Dock
 
   # Finder
+  finder_before=$(defaults export com.apple.finder - 2>/dev/null | md5 -q)
+  global_ext_before=$(defaults read NSGlobalDomain AppleShowAllExtensions 2>/dev/null)
   defaults write com.apple.finder ShowPathbar -bool true
   defaults write com.apple.finder ShowStatusBar -bool true
   defaults write NSGlobalDomain AppleShowAllExtensions -bool true
-  killall Finder
+  finder_after=$(defaults export com.apple.finder - 2>/dev/null | md5 -q)
+  global_ext_after=$(defaults read NSGlobalDomain AppleShowAllExtensions 2>/dev/null)
+  if [[ "$finder_before" != "$finder_after" || "$global_ext_before" != "$global_ext_after" ]]; then
+    killall Finder
+  fi
 
   # Keyboard
   defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
@@ -110,17 +123,21 @@ fi
 
 # install Homebrew packages from Brewfile
 if command -v brew &>/dev/null && [[ -f "${dotfiles_dir}/Brewfile" ]]; then
-  brew bundle install --file="${dotfiles_dir}/Brewfile" --no-upgrade || true
+  brew bundle install --file="${dotfiles_dir}/Brewfile" --no-upgrade || echo "Warning: brew bundle had errors" >&2
 fi
 
 # link Claude Code config
 claude_dir="${HOME}/.claude"
 mkdir -p "${claude_dir}"
 for file in CLAUDE.md statusline-command.sh settings.json keybindings.json; do
+  if [[ ! -f "${dotfiles_dir}/settings/claude/${file}" ]]; then
+    echo "Skipping Claude ${file} (not found in dotfiles)"
+    continue
+  fi
   if [[ -f "${claude_dir}/${file}" && ! -L "${claude_dir}/${file}" ]]; then
     echo "Backing up Claude ${file}"
-    mkdir -p "${backup_dir}/claude"
-    cp "${claude_dir}/${file}" "${backup_dir}/claude/"
+    mkdir -p "${install_backup_dir}/claude"
+    cp "${claude_dir}/${file}" "${install_backup_dir}/claude/"
   fi
   ln -sf "${dotfiles_dir}/settings/claude/${file}" "${claude_dir}/${file}"
 done
@@ -128,8 +145,8 @@ done
 for dir in skills rules; do
   if [[ -d "${claude_dir}/${dir}" && ! -L "${claude_dir}/${dir}" ]]; then
     echo "Backing up Claude ${dir}/"
-    mkdir -p "${backup_dir}/claude"
-    cp -r "${claude_dir}/${dir}" "${backup_dir}/claude/"
+    mkdir -p "${install_backup_dir}/claude"
+    cp -r "${claude_dir}/${dir}" "${install_backup_dir}/claude/"
   fi
   ln -sfn "${dotfiles_dir}/settings/claude/${dir}" "${claude_dir}/${dir}"
 done
@@ -143,9 +160,14 @@ if [[ ${#OBSIDIAN_VAULTS[@]} -gt 0 ]]; then
 
       # Backup existing config if it's not already a symlink
       if [[ -d "$local_obsidian" && ! -L "$local_obsidian" ]]; then
-        echo "Backing up Obsidian config for $(basename "$vault_path")"
-        mkdir -p "${backup_dir}/obsidian/$(basename "$vault_path")"
-        mv "$local_obsidian" "${backup_dir}/obsidian/$(basename "$vault_path")/"
+        obsidian_backup="${install_backup_dir}/obsidian/$(basename "$vault_path")"
+        if [[ -d "${obsidian_backup}/.obsidian" ]]; then
+          echo "Warning: Obsidian backup already exists for $(basename "$vault_path"), skipping"
+        else
+          echo "Backing up Obsidian config for $(basename "$vault_path")"
+          mkdir -p "${obsidian_backup}"
+          mv "$local_obsidian" "${obsidian_backup}/"
+        fi
       fi
 
       ln -sfn "${dotfiles_dir}/settings/obsidian/default" "$local_obsidian"
