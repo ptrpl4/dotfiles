@@ -42,9 +42,14 @@ State what was detected. If multiple types, list all.
 
 Check if `CLAUDE.md` or `.claude/CLAUDE.md` exists in the current project.
 
-- **If found**: read it, summarize what it covers in 1–2 lines. Print "✓ exists at <path>".
+- **If found**: read it and run a quick health check:
+  - Count lines — flag if over 200 (research shows instruction-following degrades with bloat)
+  - Flag sections that describe things Claude can discover by reading code (file structure, type definitions, standard patterns)
+  - Flag code style rules that should be linter/formatter config instead
+  - Check if available skills and MCP servers are declared
+  - Print "✓ exists at <path>" with a 1-line quality note (e.g., "✓ exists at .claude/CLAUDE.md — 85 lines, looks focused" or "⚠ 310 lines, consider running /agent-md to audit")
 - **If missing**: ask — *"No project CLAUDE.md found. Create one? (yes / no)"*
-  - If yes: create `.claude/CLAUDE.md` with a minimal template suited to the detected project type. Always include these sections: `## Commands`, `## Architecture`, `## Key files`, `## Known issues`. Leave placeholder content so the user can fill in details. Do not create doc files for all sections — this is a working reference, not documentation.
+  - If yes: suggest running `/agent-md` for an interactive, research-backed setup. If the user prefers a quick start, create `.claude/CLAUDE.md` with only these sections (no placeholders for empty sections): `## Commands`, `## Gotchas`, `## Repo conventions`, `## Skills & integrations`. Do not add `Architecture` or `Key files` sections — Claude can discover those from code.
 
 ---
 

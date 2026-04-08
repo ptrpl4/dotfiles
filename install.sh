@@ -135,6 +135,22 @@ for dir in skills rules hooks; do
 done
 echo "Claude Code config linked"
 
+# Create local.md if it doesn't exist (machine-specific Claude context, not tracked in git)
+if [[ ! -f "${claude_dir}/local.md" ]]; then
+  cat > "${claude_dir}/local.md" << 'LOCALEOF'
+# Machine-specific Claude context
+# Referenced by CLAUDE.md (@~/.claude/local.md) but not tracked in git.
+# Add MCP declarations, env quirks, or integrations specific to this machine.
+
+## MCP servers
+
+## Environment
+LOCALEOF
+  echo "Created ~/.claude/local.md (edit with machine-specific context)"
+else
+  echo "~/.claude/local.md already exists, skipping"
+fi
+
 # link Obsidian settings (vault paths defined in .private)
 if [[ ${#OBSIDIAN_VAULTS[@]} -gt 0 ]]; then
   for vault_path in "${OBSIDIAN_VAULTS[@]}"; do
