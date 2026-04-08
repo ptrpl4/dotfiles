@@ -66,3 +66,5 @@ Default is `/effort auto` — Claude selects effort per task. Override with `/mo
 ## Meta
 - If any rule in this file conflicts with the task or makes work harder, surface the conflict immediately — do not attempt the task first. Suggest re-reviewing the rule.
 - Rules in this file are loaded as context, not enforced configuration. Compliance improves with specificity and examples. If a rule is consistently ignored, make it more concrete or add an example.
+
+@RTK.md
