@@ -1,4 +1,5 @@
 # Set PATHS and Completions
+
 ## Brew
 if [[ -x "/opt/homebrew/bin/brew" ]]; then
     # For Apple Silicon Macs
@@ -16,9 +17,20 @@ if command -v brew &>/dev/null; then
 fi
 
 ## Node Version Manager
-# NVM_DIR and default node PATH are set in .zshenv (sourced for all shells).
-# Lazy load full NVM only in interactive shells — non-interactive shells
-# (CI, IDE subprocesses, Claude Code Bash tool) already have node on PATH via .zshenv.
+# NVM_DIR is exported in .zshenv. PATH resolution lives here because macOS runs
+# path_helper in /etc/zprofile (before ~/.zprofile), which rearranges PATH and
+# would push a .zshenv prepend down. Adding it here ensures NVM node wins.
+if [[ -n "$NVM_DIR" && -d "$NVM_DIR/versions/node" ]]; then
+  _nvm_alias=$(cat "$NVM_DIR/alias/default" 2>/dev/null)
+  if [[ -n "$_nvm_alias" ]]; then
+    _nvm_resolved=$(ls -1d "$NVM_DIR/versions/node/v${_nvm_alias}"* 2>/dev/null | sort -V | tail -1)
+    [[ -d "$_nvm_resolved/bin" ]] && export PATH="$_nvm_resolved/bin:$PATH"
+    unset _nvm_resolved
+  fi
+  unset _nvm_alias
+fi
+
+# Lazy-load full nvm in interactive shells only — PATH above is enough for non-interactive.
 if [[ -o interactive ]]; then
   _nvm_load() {
     unfunction nvm node npm npx pnpm _nvm_load 2>/dev/null
