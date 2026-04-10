@@ -71,7 +71,32 @@ Suggested allow entries by type:
 
 ---
 
-## Step 5: .gitignore check
+## Step 5: Agents check
+
+Check what subagents are available and what gaps exist.
+
+- List agents already defined in `~/.claude/agents/` and `.claude/agents/` (name + description only)
+- Check which MCP servers are configured in `~/.claude/settings.json` and `.mcp.json`
+- Cross-reference: for each MCP server found, check if a corresponding scoped agent exists
+
+**Suggest agents based on gaps:**
+
+| Condition | Suggested agent |
+|---|---|
+| Atlassian MCP configured, no `jira` agent | `jira` — Atlassian MCP scoped, keeps Jira tool descriptions out of main context |
+| Slack MCP configured, no `slack` agent | `slack-reader` — read-only Slack research, haiku model |
+| Figma MCP configured, no `figma` agent | `figma` — Figma MCP scoped, for design context and component lookup |
+| Datadog MCP configured, no `datadog` agent | `datadog` — Datadog MCP scoped, for log/metric queries |
+| Project has `.sh`/`.zsh`/`.bash` files, no shell reviewer | `shell-reviewer` — read-only script review, haiku model |
+| Git repo with no commit-reviewer agent | `commit-reviewer` — reviews diffs, suggests commit messages matching repo conventions |
+
+Print only suggestions that apply. If no gaps, print "✓ agents look complete".
+
+For each suggestion, state the benefit in one line (model context saved, capability added). Do not create agents automatically — tell the user to run `/agents` to create them interactively, or offer to write the agent file directly if asked.
+
+---
+
+## Step 6: .gitignore check
 
 If `.git/` exists in the current directory:
 - Check if `.claude/settings.local.json` appears in `.gitignore`
@@ -80,7 +105,7 @@ If `.git/` exists in the current directory:
 
 ---
 
-## Step 6: Multi-directory access
+## Step 7: Multi-directory access
 
 Ask: *"Does this project need access to directories outside the project root? (yes / no)"*
 
@@ -88,7 +113,7 @@ Ask: *"Does this project need access to directories outside the project root? (y
 
 ---
 
-## Step 7: Task type and model/effort
+## Step 8: Task type and model/effort
 
 Ask: *"What kind of work are you starting? Pick a number:"*
 
@@ -107,7 +132,7 @@ Based on choice:
 
 ---
 
-## Step 8: Summary
+## Step 9: Summary
 
 Print a compact setup summary:
 
