@@ -4,10 +4,7 @@ reset=$(tput sgr0)
 
 # Current time display
 prompt_time() {
-    local raw=$(date +"%H:%M")
-    local h="${raw%%:*}"
-    local m="${raw##*:}"
-    printf "%b─[%b%s%b:%b%s%b]" "${gray}" "${reset}" "$h" "${gray}" "${reset}" "$m" "${gray}"
+    printf "%b─[%b%s%b]" "${gray}" "${reset}" "$(date +%H:%M)" "${gray}"
 }
 
 # Box drawing style git prompt with colors (optimized)
@@ -16,12 +13,7 @@ prompt_git_box() {
 
     local git_status=''
     local branchName=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo '(unknown)')
-
-    if [[ -n "$ZSH_VERSION" ]]; then
-        branchName=${branchName:l}
-    else
-        branchName=$(echo "$branchName" | tr '[:upper:]' '[:lower:]')
-    fi
+    branchName=$(printf '%s' "$branchName" | tr '[:upper:]' '[:lower:]')
 
     local upstream=$(git rev-parse --abbrev-ref @{upstream} 2>/dev/null)
     if [[ -n "$upstream" ]]; then
@@ -65,9 +57,10 @@ prompt_exit_status() {
 
 # Background jobs indicator
 prompt_jobs_box() {
-    local job_count=$(jobs -p 2>/dev/null | wc -l)
-    job_count=${job_count// /}
-    if [[ $job_count -gt 0 ]]; then
-        printf "%b─[%bjobs %d%b]" "${gray}" "${reset}" "${job_count}" "${gray}"
-    fi
+    local jobs_output
+    jobs_output=$(jobs -p 2>/dev/null)
+    [[ -z "$jobs_output" ]] && return
+    local job_count
+    job_count=$(printf '%s\n' "$jobs_output" | grep -c .)
+    printf "%b─[%bjobs %d%b]" "${gray}" "${reset}" "${job_count}" "${gray}"
 }
