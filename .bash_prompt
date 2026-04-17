@@ -10,7 +10,6 @@ PS1+='\[${gray}\]]─[\[${reset}\]'
 PS1+='\W'  # working directory
 PS1+='\[${gray}\]]'
 PS1+='$(prompt_git_box)'
-PS1+='$(prompt_exec_time_box)'
 PS1+='$(prompt_exit_status)'
 PS1+='$(prompt_jobs_box)'
 PS1+='\n'

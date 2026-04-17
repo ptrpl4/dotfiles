@@ -44,54 +44,17 @@ prompt_git_box() {
     printf "%b─[%bgit%b:%b%s%s%b]" "${gray}" "${reset}" "${gray}" "${reset}" "${branchName}" "${git_status}" "${gray}"
 }
 
-# Zsh preexec hook — record time before each command
-preexec() {
-    timer=$SECONDS
-}
-
-# Bash preexec support via DEBUG trap
+# Capture exit code of the last command for prompt_exit_status
 if [[ -n "$BASH_VERSION" ]]; then
     __prompt_command() {
-        local exit_code=$?
-        LAST_EXIT_CODE=$exit_code
-        __preexec_invoked=
-        return $exit_code
+        LAST_EXIT_CODE=$?
     }
-
-    __debug_trap() {
-        [[ -n "$__preexec_invoked" ]] && return
-        [[ -z "${BASH_COMMAND// }" ]] && return
-        case "$BASH_COMMAND" in
-            __prompt_command*|__debug_trap*|'return '*) return ;;
-            *'PROMPT_COMMAND'*) return ;;
-        esac
-        timer=$SECONDS
-        __preexec_invoked=1
-    }
-
-    trap '__debug_trap' DEBUG
     PROMPT_COMMAND='__prompt_command'
-fi
-
-# Zsh precmd hook — capture exit code after each command
-if [[ -n "$ZSH_VERSION" ]]; then
+elif [[ -n "$ZSH_VERSION" ]]; then
     precmd() {
-        local exit_code=$?
-        LAST_EXIT_CODE=$exit_code
-        return $exit_code
+        LAST_EXIT_CODE=$?
     }
 fi
-
-# Show elapsed seconds if command took >= 1s
-prompt_exec_time_box() {
-    if [[ -n "$timer" ]]; then
-        local elapsed=$(( SECONDS - timer ))
-        if [[ $elapsed -gt 0 ]]; then
-            printf "%b─[%b%ds%b]" "${gray}" "${reset}" "${elapsed}" "${gray}"
-        fi
-        unset timer
-    fi
-}
 
 # Exit status indicator
 prompt_exit_status() {
