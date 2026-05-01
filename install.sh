@@ -38,6 +38,19 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   # Rectangle
   mkdir -p "${HOME}/Library/Application Support/Rectangle"
   ln -sf "${dotfiles_dir}/settings/rectangle/RectangleConfig.json" "${HOME}/Library/Application Support/Rectangle/RectangleConfig.json"
+
+  # Ghostty
+  ghostty_dir="${HOME}/Library/Application Support/com.mitchellh.ghostty"
+  ghostty_src="${dotfiles_dir}/settings/ghostty/config.ghostty"
+  if [[ -f "$ghostty_src" ]]; then
+    mkdir -p "$ghostty_dir"
+    if [[ -f "${ghostty_dir}/config.ghostty" && ! -L "${ghostty_dir}/config.ghostty" ]]; then
+      echo "Backing up Ghostty config"
+      mkdir -p "${install_backup_dir}/ghostty"
+      cp "${ghostty_dir}/config.ghostty" "${install_backup_dir}/ghostty/"
+    fi
+    ln -sf "$ghostty_src" "${ghostty_dir}/config.ghostty" && echo "Ghostty config linked"
+  fi
 fi
 
 # link Zed settings (profile defined in .private: "work" or "home")
