@@ -33,3 +33,6 @@ settings/obsidian/default/plugins/*/*.sh
 # llm
 
 .claude
+
+# Work-specific Claude skills (not shared via dotfiles)
+settings/claude/skills/work-*/
