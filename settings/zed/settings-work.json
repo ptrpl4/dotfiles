@@ -2,11 +2,30 @@
   // ============================================================================
   // EDITOR BEHAVIOR
   // ============================================================================
-  "agent_servers": {
-    "claude-acp": {
-      "type": "registry"
-    }
+  "preferred_line_length": 100,
+  "soft_wrap": "none",
+  "tab_bar": {
+    "show_pinned_tabs_in_separate_row": false,
+    "show_tab_bar_buttons": false,
+    "show_nav_history_buttons": false
   },
+  "diagnostics": {
+    "button": true
+  },
+  "file_finder": {
+    "file_icons": true
+  },
+  "prettier": {
+    "allowed": true
+  },
+  "show_wrap_guides": false,
+  "rounded_selection": false,
+  "hide_mouse": "never",
+  "cursor_blink": true,
+  "session": {
+    "trust_all_worktrees": true
+  },
+  "use_system_path_prompts": true,
   "format_on_save": "off",
   "auto_update": false,
   "autosave": "on_focus_change",
@@ -43,38 +62,19 @@
     "mode": "subtle"
   },
   "agent": {
+    "dock": "right",
+    "enable_feedback": false,
     "favorite_models": [
       {
-        "provider": "anthropic",
-        "model": "claude-sonnet-4-6-thinking-latest",
-        "enable_thinking": false
-      },
-      {
-        "provider": "anthropic",
-        "model": "claude-opus-4-6-1m-context-latest",
-        "enable_thinking": false
-      },
-      {
-        "provider": "anthropic",
-        "model": "claude-opus-4-6-1m-context-thinking-latest",
-        "enable_thinking": false
-      },
-      {
-        "provider": "anthropic",
-        "model": "claude-opus-4-6-latest",
-        "enable_thinking": false
-      },
-      {
-        "provider": "anthropic",
-        "model": "claude-opus-4-6-thinking-latest",
+        "provider": "ollama",
+        "model": "qwen2.5-coder:7b",
         "enable_thinking": false
       }
     ],
     "default_profile": "write",
     "default_model": {
-      "enable_thinking": true,
-      "provider": "anthropic",
-      "model": "claude-opus-4-6-thinking-latest"
+      "provider": "google",
+      "model": "gemini-3-flash-preview"
     }
   },
 
@@ -82,13 +82,17 @@
   // PANELS - LEFT SIDE
   // ============================================================================
   "project_panel": {
+    "hide_hidden": false,
+    "git_status_indicator": true,
+    "diagnostic_badges": false,
+    "bold_folder_labels": false,
     "button": true,
     "dock": "left",
     "default_width": 240,
     "starts_open": true,
     "hide_root": true,
     "entry_spacing": "comfortable",
-    "file_icons": false,
+    "file_icons": true,
     "folder_icons": true,
     "git_status": true,
     "show_diagnostics": "all",
@@ -105,6 +109,11 @@
     }
   },
   "git_panel": {
+    "show_count_badge": false,
+    "diff_stats": true,
+    "folder_icons": false,
+    "file_icons": true,
+    "tree_view": true,
     "button": true,
     "dock": "left",
     "default_width": 240,
@@ -142,14 +151,12 @@
       "show": null
     }
   },
-  "notification_panel": {
-    "button": false
-  },
 
   // ============================================================================
   // TERMINAL
   // ============================================================================
   "terminal": {
+    "show_count_badge": false,
     "button": true,
     "dock": "bottom",
     "default_width": 640,
@@ -185,9 +192,13 @@
   // GIT
   // ============================================================================
   "git": {
+    "blame": {
+      "show_avatar": false
+    },
     "git_gutter": "tracked_files",
     "hunk_style": "staged_hollow",
     "inline_blame": {
+      "show_commit_summary": false,
       "enabled": true
     },
     "branch_picker": {
@@ -199,7 +210,7 @@
   // UI COMPONENTS
   // ============================================================================
   "title_bar": {
-    "show_branch_icon": true,
+    "show_branch_status_icon": true,
     "show_branch_name": true,
     "show_project_items": true,
     "show_onboarding_banner": false,
@@ -208,8 +219,9 @@
     "show_menus": true
   },
   "status_bar": {
+    "show_active_file": true,
     "active_language_button": true,
-    "cursor_position_button": false
+    "cursor_position_button": true
   },
   "tabs": {
     "close_position": "right",
