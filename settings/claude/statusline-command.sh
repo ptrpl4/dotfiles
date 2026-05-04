@@ -4,6 +4,8 @@
 input=$(cat)
 
 gray=$(tput setaf 8 2>/dev/null || printf '\033[90m')
+orange=$(tput setaf 214 2>/dev/null || printf '\033[38;5;214m')
+red=$(tput setaf 1 2>/dev/null || printf '\033[31m')
 reset=$(tput sgr0 2>/dev/null || printf '\033[0m')
 
 # Print ─[content] segment if value is non-empty
@@ -53,12 +55,21 @@ fi
 
 # ── Claude-specific segments ─────────────────────────────────────────────────
 
-# Context: compute used tokens from percentage * window size
+# Context: compute used tokens from percentage * window size; color by threshold
 ctx_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)
 ctx_size=$(echo "$input" | jq -r '.context_window.context_window_size // empty' 2>/dev/null)
 if [[ -n "$ctx_pct" && -n "$ctx_size" ]]; then
-    ctx_str=$(awk "BEGIN{used=int($ctx_pct/100*$ctx_size/1000); total=int($ctx_size/1000); printf \"%dk/%dk\", used, total}")
-    seg "ctx $ctx_str"
+    ctx_used=$(awk "BEGIN{printf \"%d\", int($ctx_pct/100*$ctx_size/1000)}")
+    ctx_total=$(awk "BEGIN{printf \"%d\", int($ctx_size/1000)}")
+    ctx_str="${ctx_used}k/${ctx_total}k"
+    if [[ "$ctx_pct" -ge 88 ]]; then
+        ctx_color="$red"
+    elif [[ "$ctx_pct" -ge 75 ]]; then
+        ctx_color="$orange"
+    else
+        ctx_color="$reset"
+    fi
+    printf "%b─[%bctx %b%s%b]" "$gray" "$reset" "$ctx_color" "$ctx_str" "$gray"
 fi
 
 # Model
