@@ -24,7 +24,6 @@
     "figma@claude-plugins-official": true
   },
   "spinnerTipsEnabled": false,
-  "fastMode": true,
   "autoUpdatesChannel": "latest",
   "minimumVersion": "2.1.81",
   "prefersReducedMotion": true,
