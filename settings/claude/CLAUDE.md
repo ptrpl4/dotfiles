@@ -63,5 +63,4 @@ This CLAUDE.md is shared across machines via dotfiles. Machine-specific context
 (MCP servers, env quirks, account-specific integrations) lives in `~/.claude/local.md`,
 which is not tracked in git. The install script creates a starter file if missing.
 
-@RTK.md
 @~/.claude/local.md

@@ -15,25 +15,20 @@
     ],
     "defaultMode": "acceptEdits"
   },
+  "model": "claude-sonnet-4-6",
   "statusLine": {
     "type": "command",
     "command": "bash $HOME/.claude/statusline-command.sh"
   },
+  "enabledPlugins": {
+    "figma@claude-plugins-official": true
+  },
   "spinnerTipsEnabled": false,
+  "fastMode": true,
   "autoUpdatesChannel": "latest",
   "minimumVersion": "2.1.81",
   "prefersReducedMotion": true,
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/rtk-rewrite.sh"
-          }
-        ]
-      }
-    ]
-  }
+  "theme": "dark-ansi",
+  "autoCompactEnabled": false,
+  "remoteControlAtStartup": false
 }
