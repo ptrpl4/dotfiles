@@ -99,4 +99,26 @@ elif [[ -n "$effort_label" ]]; then
     seg "$effort_label"
 fi
 
+# Cost + rate limits: ─[$3.8 5h:20 7d:2]
+cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty' 2>/dev/null)
+rl5h=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty' 2>/dev/null)
+rl7d=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null)
+limits_str=""
+[[ -n "$cost" ]] && limits_str+="$(awk "BEGIN{printf \"\$%.1f\", $cost}")"
+if [[ -n "$rl5h" ]]; then
+    rl5h_color=""
+    [[ "$rl5h" -ge 88 ]] && rl5h_color="$red"
+    [[ "$rl5h" -ge 75 && "$rl5h" -lt 88 ]] && rl5h_color="$orange"
+    [[ -n "$limits_str" ]] && limits_str+=" "
+    limits_str+="${rl5h_color}5h:${rl5h}${gray}"
+fi
+if [[ -n "$rl7d" ]]; then
+    rl7d_color=""
+    [[ "$rl7d" -ge 88 ]] && rl7d_color="$red"
+    [[ "$rl7d" -ge 75 && "$rl7d" -lt 88 ]] && rl7d_color="$orange"
+    [[ -n "$limits_str" ]] && limits_str+=" "
+    limits_str+="${rl7d_color}7d:${rl7d}${gray}"
+fi
+[[ -n "$limits_str" ]] && printf "%b─[%b%s%b]" "$gray" "$reset" "$limits_str" "$gray"
+
 printf "%b\n" "$reset"
