@@ -1,7 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Skill(keybindings-help)",
       "WebFetch(domain:github.com)",
       "Bash(git status)",
       "Bash(git log:*)",
@@ -11,7 +10,19 @@
       "Bash(jq:*)",
       "Bash(chmod +x:*)",
       "Read(~/.claude/**)",
-      "Read(**/.claude/**)"
+      "Read(**/.claude/**)",
+      "mcp__claude_ai_Atlassian__*",
+      "mcp__qase__*",
+      "mcp__claude_ai_Figma__*",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_console_messages",
+      "Bash(curl -sS*)",
+      "Bash(glab:*)"
     ],
     "defaultMode": "acceptEdits"
   },
@@ -28,6 +39,12 @@
   "minimumVersion": "2.1.81",
   "prefersReducedMotion": true,
   "theme": "dark-ansi",
+  "spinnerTipsEnabled": false,
+  "effortLevel": "high",
+  "autoUpdatesChannel": "latest",
+  "minimumVersion": "2.1.81",
+  "prefersReducedMotion": true,
+  "theme": "auto",
   "autoCompactEnabled": false,
   "remoteControlAtStartup": false
 }
