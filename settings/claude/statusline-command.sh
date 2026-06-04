@@ -15,9 +15,9 @@ seg() {
 
 # ── Shell-mirrored segments ──────────────────────────────────────────────────
 
-# Directory (basename, matches %c)
+# Directory (basename, matches %c) — first segment, no leading ─
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd' 2>/dev/null)
-seg "$(basename "$cwd")"
+printf "%b[%b%s%b]" "$gray" "$reset" "$(basename "$cwd")" "$gray"
 
 # Git: matches prompt_git_box()
 git_branch=""
