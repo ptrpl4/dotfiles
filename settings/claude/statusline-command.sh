@@ -15,11 +15,6 @@ seg() {
 
 # ── Shell-mirrored segments ──────────────────────────────────────────────────
 
-# Time: matches prompt_time()
-h=$(date +"%H")
-m=$(date +"%M")
-printf "%b─[%b%s%b:%b%s%b]" "$gray" "$reset" "$h" "$gray" "$reset" "$m" "$gray"
-
 # Directory (basename, matches %c)
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd' 2>/dev/null)
 seg "$(basename "$cwd")"
