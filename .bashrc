@@ -23,25 +23,6 @@ fi
 export ANDROID_HOME=~/Library/Android/sdk
 export PATH=$PATH:$ANDROID_HOME/emulator
 
-## Node Version Manager (lazy loaded for performance)
-export NVM_DIR="$HOME/nvm"
-
-_nvm_load() {
-  unset -f nvm node npm npx pnpm _nvm_load
-  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
-    . "$NVM_DIR/nvm.sh"
-    [[ -s "$NVM_DIR/bash_completion" ]] && . "$NVM_DIR/bash_completion"
-  else
-    echo "Warning: nvm not found at $NVM_DIR/nvm.sh" >&2
-    return 1
-  fi
-}
-
-nvm()  { _nvm_load && nvm  "$@"; }
-node() { _nvm_load && node "$@"; }
-npm()  { _nvm_load && npm  "$@"; }
-npx()  { _nvm_load && npx  "$@"; }
-pnpm() { _nvm_load && pnpm "$@"; }
 
 export BASH_SILENCE_DEPRECATION_WARNING=1
 
