@@ -85,6 +85,7 @@ fi
 cost=$(j '.cost.total_cost_usd // empty')
 rl5h=$(j 'if .rate_limits.five_hour.used_percentage then (.rate_limits.five_hour.used_percentage | floor | tostring) else empty end')
 rl7d=$(j 'if .rate_limits.seven_day.used_percentage then (.rate_limits.seven_day.used_percentage | floor | tostring) else empty end')
+rl5h_reset=$(j '.rate_limits.five_hour.resets_at // empty')
 limits=""
 [[ -n "$cost" ]] && limits="$(awk "BEGIN{printf \"\$%.1f\", $cost}")"
 if [[ -n "$rl5h" || -n "$rl7d" ]]; then
@@ -93,7 +94,15 @@ if [[ -n "$rl5h" || -n "$rl7d" ]]; then
     [[ "$max_rl" -ge 75 ]] && rl_color="$orange"
     [[ "$max_rl" -ge 88 ]] && rl_color="$red"
     [[ -n "$limits" ]] && limits+=" "
-    limits+="${rl_color}${rl5h:-?}/${rl7d:-?}%${reset}"
+    limits+="${rl_color}${rl5h:-?}/${rl7d:-?}%${gray}"
+    if [[ -n "$rl5h_reset" ]]; then
+        now=$(date +%s)
+        diff=$(( rl5h_reset - now ))
+        if [[ "$diff" -gt 0 ]]; then
+            mins=$(( diff / 60 ))
+            limits+=" ↺${mins}m"
+        fi
+    fi
 fi
 [[ -n "$limits" ]] && { sep; printf "%b%s" "$reset" "$limits"; }
 

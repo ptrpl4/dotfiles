@@ -7,6 +7,12 @@
       "bindings": {
         "ctrl+k ctrl+t": "app:toggleTodos"
       }
+    },
+    {
+      "context": "Chat",
+      "bindings": {
+        "shift+enter": "chat:newline"
+      }
     }
   ]
 }

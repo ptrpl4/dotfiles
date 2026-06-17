@@ -2,6 +2,7 @@
   // ============================================================================
   // EDITOR BEHAVIOR
   // ============================================================================
+  "disable_ai": false,
   "tab_bar": {
     "show_pinned_tabs_in_separate_row": false,
     "show_tab_bar_buttons": false,
@@ -57,9 +58,13 @@
   // AI FEATURES
   // ============================================================================
   "edit_predictions": {
+    "allow_data_collection": "no",
     "mode": "subtle"
   },
   "agent": {
+    "play_sound_when_agent_done": "always",
+    "notify_when_agent_waiting": "all_screens",
+    "button": true,
     "dock": "right",
     "enable_feedback": false,
     "favorite_models": [
