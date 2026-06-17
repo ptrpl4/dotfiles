@@ -6,12 +6,22 @@ orange=$(tput setaf 214 2>/dev/null || printf '\033[38;5;214m')
 red=$(tput setaf 1 2>/dev/null || printf '\033[31m')
 reset=$(tput sgr0 2>/dev/null || printf '\033[0m')
 
-seg() { [[ -n "$1" ]] && printf "%b─[%b%s%b]" "$gray" "$reset" "$1" "$gray"; }
+first=1
+sep() { if [[ $first -eq 1 ]]; then first=0; else printf "%b · " "$gray"; fi; }
 j()   { jq -r "$1" <<< "$input" 2>/dev/null; }
+# format a value in thousands: 50 -> "50k", 1000 -> "1M", 1500 -> "1.5M"
+fmtk() { awk "BEGIN{v=$1; if (v>=1000){v/=1000; if(v==int(v)) printf \"%dM\",v; else printf \"%.1fM\",v} else printf \"%dk\",v}"; }
 
 # Directory
 cwd=$(j '.workspace.current_dir // .cwd // empty')
-printf "%b[%b%s%b]" "$gray" "$reset" "$(basename "$cwd")" "$gray"
+dir=$(basename "$cwd")
+if [[ ${#dir} -gt 24 ]]; then
+    keep=$(( 24 - 3 ))
+    head=$(( (keep + 1) / 2 ))
+    tail=$(( keep / 2 ))
+    dir="${dir:0:$head}...${dir: -$tail}"
+fi
+sep; printf "%b%s" "$reset" "$dir"
 
 # Git
 if git -C "$cwd" rev-parse --is-inside-work-tree &>/dev/null; then
@@ -28,41 +38,47 @@ if git -C "$cwd" rev-parse --is-inside-work-tree &>/dev/null; then
         [[ "$ahead"  -gt 0 ]] && git_status+="↑${ahead}"
         [[ "$ahead" -eq 0 && "$behind" -eq 0 ]] && git_status="✓"
     fi
+    sep
     if [[ -n "$git_status" ]]; then
-        printf "%b─[%bgit%b:%b%s%b:%b%s%b]" "$gray" "$reset" "$gray" "$reset" "$branch" "$gray" "$reset" "$git_status" "$gray"
+        printf "%b%s %s" "$reset" "$branch" "$git_status"
     else
-        printf "%b─[%bgit%b:%b%s%b]" "$gray" "$reset" "$gray" "$reset" "$branch" "$gray"
+        printf "%b%s" "$reset" "$branch"
     fi
 fi
 
-# Context + Model
+# Context + Model + Effort
 ctx_pct=$(j '.context_window.used_percentage // empty')
 ctx_size=$(j '.context_window.context_window_size // empty')
 model=$(j '.model.display_name // empty')
-if [[ -n "$ctx_pct" && -n "$ctx_size" ]]; then
-    read -r ctx_used ctx_total < <(awk "BEGIN{printf \"%d %d\", int($ctx_pct/100*$ctx_size/1000), int($ctx_size/1000)}")
-    ctx_color="$reset"
-    [[ "$ctx_pct" -ge 75 ]] && ctx_color="$orange"
-    [[ "$ctx_pct" -ge 88 ]] && ctx_color="$red"
-    seg_content="${ctx_used}/${ctx_total}k"
-    [[ -n "$model" ]] && seg_content+=" $(tr ' ' '-' <<< "$model")"
-    printf "%b─[%b%s%b]" "$gray" "$ctx_color" "$seg_content" "$gray"
-elif [[ -n "$model" ]]; then
-    seg "$(tr ' ' '-' <<< "$model")"
+# strip trailing parenthetical, e.g. "Opus 4.8 (1M context)" -> "Opus 4.8"
+model="${model%% (*}"
+# "Sonnet 4.6" -> "So-4.6" (kept long for warn check below)
+model_full="$model"
+if [[ -n "$model" ]]; then
+    model=$(sed 's/\([A-Za-z][A-Za-z]\)[A-Za-z]* \(.*\)/\1-\2/' <<< "$model")
 fi
-
-# Effort
 effort=$(jq -r '.effortLevel // empty' "$HOME/.claude/settings.json" 2>/dev/null)
 case "$effort" in
     low) label="lo" ;; medium) label="med" ;; high) label="hi" ;;
     max) label="max" ;; auto) label="auto" ;; *) label="" ;;
 esac
-if [[ -n "$label" ]]; then
+if [[ -n "$label" && -n "$model" ]]; then
     warn=""
-    model_lc=$(tr '[:upper:]' '[:lower:]' <<< "$model")
+    model_lc=$(tr '[:upper:]' '[:lower:]' <<< "$model_full")
     [[ "$model_lc" == *opus*  && "$effort" == "low" ]] && warn="!"
     [[ "$model_lc" == *haiku* && ( "$effort" == "high" || "$effort" == "max" ) ]] && warn="!"
-    seg "${label}${warn}"
+    model="${model}-${label}${warn}"
+fi
+if [[ -n "$ctx_pct" && -n "$ctx_size" ]]; then
+    read -r ctx_used ctx_total < <(awk "BEGIN{printf \"%d %d\", int($ctx_pct/100*$ctx_size/1000), int($ctx_size/1000)}")
+    ctx_color="$reset"
+    [[ "$ctx_pct" -ge 75 ]] && ctx_color="$orange"
+    [[ "$ctx_pct" -ge 88 ]] && ctx_color="$red"
+    seg_content="$(fmtk "$ctx_used")/$(fmtk "$ctx_total")"
+    [[ -n "$model" ]] && seg_content+=" $model"
+    sep; printf "%b%s" "$ctx_color" "$seg_content"
+elif [[ -n "$model" ]]; then
+    sep; printf "%b%s" "$reset" "$model"
 fi
 
 # Cost + rate limits
@@ -77,8 +93,8 @@ if [[ -n "$rl5h" || -n "$rl7d" ]]; then
     [[ "$max_rl" -ge 75 ]] && rl_color="$orange"
     [[ "$max_rl" -ge 88 ]] && rl_color="$red"
     [[ -n "$limits" ]] && limits+=" "
-    limits+="${rl_color}${rl5h:-?}/${rl7d:-?}%${gray}"
+    limits+="${rl_color}${rl5h:-?}/${rl7d:-?}%${reset}"
 fi
-[[ -n "$limits" ]] && printf "%b─[%b%s%b]" "$gray" "$reset" "$limits" "$gray"
+[[ -n "$limits" ]] && { sep; printf "%b%s" "$reset" "$limits"; }
 
 printf "%b\n" "$reset"

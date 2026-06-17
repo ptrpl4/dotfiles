@@ -7,12 +7,12 @@ paths:
   - "**/*.mjs"
   - "**/*.cjs"
   - "**/package.json"
+  - "**/.node-version"
   - "**/.nvmrc"
 ---
 
-# Node / NVM Rules
+# Node / n Rules
 
-- `nvm` is a shell function — not available in the Bash tool directly. Source it first:
-  `. "$NVM_DIR/nvm.sh" && nvm <command>`
-- If the project has `.nvmrc`, run `. "$NVM_DIR/nvm.sh" && nvm install` before assuming the right Node version is active
-- Prefer `node`, `npm`, `npx`, `pnpm` directly (available on PATH via NVM default) — only source nvm.sh when you need `nvm use` or `nvm install`
+- `n` is the Node version manager — use `n <version>` or `n auto` to switch versions
+- If the project has `.node-version`, run `n auto` before assuming the right Node version is active
+- `node`, `npm`, `npx`, `pnpm` are available directly on PATH via `n`'s active version

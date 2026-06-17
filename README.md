@@ -34,7 +34,7 @@ Override git identity per machine. Included by `.gitconfig` automatically.
 ### Troubleshooting
 
 - Check `~/dotfiles/backups` — previous versions of overwritten files are saved there
-- NVM and Docker are expected to be installed
+- n and Docker are expected to be installed
 
 ## Tools
 

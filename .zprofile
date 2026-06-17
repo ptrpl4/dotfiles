@@ -54,6 +54,10 @@ if [[ -d "/opt/homebrew/opt/python@3.13" ]]; then
   export PATH="/opt/homebrew/opt/python@3.13/libexec/bin:$PATH"
 fi
 
+## n (Node version manager)
+export N_PREFIX="$HOME/.n"
+export PATH="$N_PREFIX/bin:$PATH"
+
 ## local binaries (pipx, poetry, etc.)
 export PATH="$HOME/.local/bin:$PATH"
 
