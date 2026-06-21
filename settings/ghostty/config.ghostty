@@ -1,1 +1,6 @@
 theme = dark:Ayu Mirage,light:Modus Operandi
+
+# Terminal bell: Claude Code rings the bell when it finishes or needs approval.
+# system = desktop notification, audio = play sound, attention = bounce dock.
+bell-features = system,audio,attention,title
+bell-audio-path = /System/Library/Sounds/Glass.aiff

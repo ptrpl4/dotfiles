@@ -62,7 +62,7 @@
     "mode": "subtle"
   },
   "agent": {
-    "play_sound_when_agent_done": "always",
+    "play_sound_when_agent_done": "when_hidden",
     "notify_when_agent_waiting": "all_screens",
     "button": true,
     "dock": "right",
@@ -162,6 +162,7 @@
   // TERMINAL
   // ============================================================================
   "terminal": {
+    "bell": "system",
     "show_count_badge": false,
     "button": true,
     "dock": "bottom",
