@@ -156,7 +156,6 @@
   // TERMINAL
   // ============================================================================
   "terminal": {
-    "bell": "system",
     "show_count_badge": false,
     "button": true,
     "dock": "bottom",

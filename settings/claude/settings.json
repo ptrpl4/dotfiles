@@ -2,7 +2,7 @@
   "permissions": {
     "defaultMode": "acceptEdits"
   },
-  "model": "sonnet",
+  "model": "opus[1m]",
   "statusLine": {
     "type": "command",
     "command": "bash $HOME/.claude/statusline-command.sh"
@@ -11,15 +11,19 @@
     "chrome-devtools-mcp@claude-plugins-official": true
   },
   "spinnerTipsEnabled": false,
-  "advisorModel": "opus",
+  "effortLevel": "high",
   "promptSuggestionEnabled": false,
   "awaySummaryEnabled": false,
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
   "prefersReducedMotion": true,
-  "theme": "dark-ansi",
+  "theme": "auto",
+  "editorMode": "normal",
+  "preferredNotifChannel": "auto",
   "autoCompactEnabled": false,
   "fileCheckpointingEnabled": false,
-  "agentPushNotifEnabled": true,
-  "preferredNotifChannel": "terminal_bell"
+  "showTurnDuration": false,
+  "remoteControlAtStartup": true,
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true
 }
