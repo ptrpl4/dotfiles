@@ -72,8 +72,9 @@ fi
 if [[ -n "$ctx_pct" && -n "$ctx_size" ]]; then
     read -r ctx_used ctx_total < <(awk "BEGIN{printf \"%d %d\", int($ctx_pct/100*$ctx_size/1000), int($ctx_size/1000)}")
     ctx_color="$reset"
-    [[ "$ctx_pct" -ge 75 ]] && ctx_color="$orange"
-    [[ "$ctx_pct" -ge 88 ]] && ctx_color="$red"
+    # color by percentage (small contexts) or absolute used tokens (1M contexts)
+    [[ "$ctx_pct" -ge 75 || "$ctx_used" -ge 200 ]] && ctx_color="$orange"
+    [[ "$ctx_pct" -ge 88 || "$ctx_used" -ge 400 ]] && ctx_color="$red"
     seg_content="$(fmtk "$ctx_used")/$(fmtk "$ctx_total")"
     [[ -n "$model" ]] && seg_content+=" $model"
     sep; printf "%b%s" "$ctx_color" "$seg_content"
@@ -81,19 +82,16 @@ elif [[ -n "$model" ]]; then
     sep; printf "%b%s" "$reset" "$model"
 fi
 
-# Cost + rate limits
-cost=$(j '.cost.total_cost_usd // empty')
+# Rate limits
 rl5h=$(j 'if .rate_limits.five_hour.used_percentage then (.rate_limits.five_hour.used_percentage | floor | tostring) else empty end')
 rl7d=$(j 'if .rate_limits.seven_day.used_percentage then (.rate_limits.seven_day.used_percentage | floor | tostring) else empty end')
 rl5h_reset=$(j '.rate_limits.five_hour.resets_at // empty')
 limits=""
-[[ -n "$cost" ]] && limits="$(awk "BEGIN{printf \"\$%.1f\", $cost}")"
 if [[ -n "$rl5h" || -n "$rl7d" ]]; then
     max_rl=${rl5h:-0}; [[ -n "$rl7d" && "$rl7d" -gt "$max_rl" ]] && max_rl=$rl7d
     rl_color=""
     [[ "$max_rl" -ge 75 ]] && rl_color="$orange"
     [[ "$max_rl" -ge 88 ]] && rl_color="$red"
-    [[ -n "$limits" ]] && limits+=" "
     limits+="${rl_color}${rl5h:-?}/${rl7d:-?}%${gray}"
     if [[ -n "$rl5h_reset" ]]; then
         now=$(date +%s)
