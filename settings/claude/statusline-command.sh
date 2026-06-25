@@ -6,14 +6,38 @@ orange=$(tput setaf 214 2>/dev/null || printf '\033[38;5;214m')
 red=$(tput setaf 1 2>/dev/null || printf '\033[31m')
 reset=$(tput sgr0 2>/dev/null || printf '\033[0m')
 
+# Pull every field from the stdin JSON in a single jq pass, one value per line,
+# rather than forking jq once per field. Newline-delimited (not tab) so empty
+# fields keep their position — the read loop preserves blank lines.
+F=()
+while IFS= read -r line; do F+=("$line"); done < <(
+    jq -r '
+      def num: if . == null then "" else floor end;
+      (.workspace.current_dir // .cwd // ""),
+      (.context_window.used_percentage | num),
+      (.context_window.context_window_size // ""),
+      (.model.display_name // ""),
+      (.effort.level // ""),
+      (.rate_limits.five_hour.used_percentage | num),
+      (.rate_limits.seven_day.used_percentage | num),
+      (.rate_limits.five_hour.resets_at | num)
+    ' <<< "$input" 2>/dev/null
+)
+cwd=${F[0]}
+ctx_pct=${F[1]}
+ctx_size=${F[2]}
+model=${F[3]}
+effort=${F[4]}
+rl5h=${F[5]}
+rl7d=${F[6]}
+rl5h_reset=${F[7]}
+
 first=1
 sep() { if [[ $first -eq 1 ]]; then first=0; else printf "%b · " "$gray"; fi; }
-j()   { jq -r "$1" <<< "$input" 2>/dev/null; }
 # format a value in thousands: 50 -> "50k", 1000 -> "1M", 1500 -> "1.5M"
 fmtk() { awk "BEGIN{v=$1; if (v>=1000){v/=1000; if(v==int(v)) printf \"%dM\",v; else printf \"%.1fM\",v} else printf \"%dk\",v}"; }
 
 # Directory
-cwd=$(j '.workspace.current_dir // .cwd // empty')
 dir=$(basename "$cwd")
 if [[ ${#dir} -gt 24 ]]; then
     keep=$(( 24 - 3 ))
@@ -47,17 +71,13 @@ if git -C "$cwd" rev-parse --is-inside-work-tree &>/dev/null; then
 fi
 
 # Context + Model + Effort
-ctx_pct=$(j '.context_window.used_percentage // empty')
-ctx_size=$(j '.context_window.context_window_size // empty')
-model=$(j '.model.display_name // empty')
 # strip trailing parenthetical, e.g. "Opus 4.8 (1M context)" -> "Opus 4.8"
 model="${model%% (*}"
-# "Sonnet 4.6" -> "So-4.6" (kept long for warn check below)
 model_full="$model"
+# "Sonnet 4.6" -> "So-4.6" (kept long for warn check below)
 if [[ -n "$model" ]]; then
     model=$(sed 's/\([A-Za-z][A-Za-z]\)[A-Za-z]* \(.*\)/\1-\2/' <<< "$model")
 fi
-effort=$(jq -r '.effortLevel // empty' "$HOME/.claude/settings.json" 2>/dev/null)
 case "$effort" in
     low) label="lo" ;; medium) label="med" ;; high) label="hi" ;;
     max) label="max" ;; auto) label="auto" ;; *) label="" ;;
@@ -83,9 +103,6 @@ elif [[ -n "$model" ]]; then
 fi
 
 # Rate limits
-rl5h=$(j 'if .rate_limits.five_hour.used_percentage then (.rate_limits.five_hour.used_percentage | floor | tostring) else empty end')
-rl7d=$(j 'if .rate_limits.seven_day.used_percentage then (.rate_limits.seven_day.used_percentage | floor | tostring) else empty end')
-rl5h_reset=$(j '.rate_limits.five_hour.resets_at // empty')
 limits=""
 if [[ -n "$rl5h" || -n "$rl7d" ]]; then
     max_rl=${rl5h:-0}; [[ -n "$rl7d" && "$rl7d" -gt "$max_rl" ]] && max_rl=$rl7d
