@@ -36,15 +36,20 @@ first=1
 sep() { if [[ $first -eq 1 ]]; then first=0; else printf "%b · " "$gray"; fi; }
 # format a value in thousands: 50 -> "50k", 1000 -> "1M", 1500 -> "1.5M"
 fmtk() { awk "BEGIN{v=$1; if (v>=1000){v/=1000; if(v==int(v)) printf \"%dM\",v; else printf \"%.1fM\",v} else printf \"%dk\",v}"; }
+# shorten a string to max 24 chars with a middle ellipsis: "longname" -> "lon..ame"
+shorten() {
+    local s=$1 max=20 keep head tail
+    if [[ ${#s} -gt $max ]]; then
+        keep=$(( max - 2 ))
+        head=$(( (keep + 1) / 2 ))
+        tail=$(( keep / 2 ))
+        s="${s:0:$head}..${s: -$tail}"
+    fi
+    printf '%s' "$s"
+}
 
 # Directory
-dir=$(basename "$cwd")
-if [[ ${#dir} -gt 24 ]]; then
-    keep=$(( 24 - 3 ))
-    head=$(( (keep + 1) / 2 ))
-    tail=$(( keep / 2 ))
-    dir="${dir:0:$head}...${dir: -$tail}"
-fi
+dir=$(shorten "$(basename "$cwd")")
 sep; printf "%b%s" "$reset" "$dir"
 
 # Git
@@ -53,6 +58,7 @@ if git -C "$cwd" rev-parse --is-inside-work-tree &>/dev/null; then
              || git --no-optional-locks -C "$cwd" rev-parse --short HEAD 2>/dev/null \
              || echo "?")
     branch=$(tr '[:upper:]' '[:lower:]' <<< "$branch")
+    branch=$(shorten "$branch")
     git_status=""
     upstream=$(git --no-optional-locks -C "$cwd" rev-parse --abbrev-ref @{upstream} 2>/dev/null)
     if [[ -n "$upstream" ]]; then
