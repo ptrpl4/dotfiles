@@ -2,8 +2,7 @@
 
 ## Commits & Git
 - Never add Co-Authored-By lines to commits
-- Never commit without user approval
-- Never push without user approval
+- Never commit or push without user approval
 - Keep commit subject line short
 
 ## Code Style
@@ -20,6 +19,7 @@
 ## ENV
 - Check project's packageManager field or lock files to determine which package manager to use
 - Check ~/dotfiles/ if some installed tools are not running
+- The Bash tool runs commands through zsh, not bash — watch for zsh builtins shadowing system binaries (e.g. `log` is a zsh builtin; call `/usr/bin/log` by full path)
 
 ## Permissions & Access
 - On first session in a new project, suggest setting up `.claude/settings.json` with project-specific allowed tools — analyze what commands will likely be needed and propose an `allow` list
@@ -34,7 +34,7 @@
 ## Model & Effort
 - Default: `/effort auto`. Use `opus` + `/effort high` for architecture, research, or complex multi-file work
 - Avoid: `opus/low` (expensive model, minimum thinking), `haiku/high` (effort ceiling on cheapest model)
-- When context fills up: `/compact`. Check spend: `/cost`. Check limits: `/usage`
+- When context fills up: `/compact`
 
 ## Output
 - Do not use emoji unless the task explicitly involves them
@@ -45,22 +45,8 @@
 - At the end of a work session with significant decisions, summarize key points worth remembering
 
 ## Skills
-Available via `/skill-name`:
-- `/claude-init` — project setup: detect type, scaffold config, set model/effort
-- `/agent-md` — create or audit CLAUDE.md files using research-backed principles
-- `/session` — show current session state (model, effort, context, hooks)
-- `/release-summary` — summarize recent Claude Code release notes
-- `/explain` — explain current file or code selection
-- `/simplify` — review changed code for reuse, quality, efficiency
-- `/update-config` — configure settings.json and hooks
+Skills are available via `/skill-name`. For work-related tasks, check the `work-*` skills first.
 
 ## Meta
 - If any rule here conflicts with the task, surface the conflict immediately — do not attempt the task first
 - Rules are context, not enforced config. If consistently ignored, make the rule more concrete
-
-## Machine-specific config
-This CLAUDE.md is shared across machines via dotfiles. Machine-specific context
-(MCP servers, env quirks, account-specific integrations) lives in `~/.claude/local.md`,
-which is not tracked in git. The install script creates a starter file if missing.
-
-@~/.claude/local.md
