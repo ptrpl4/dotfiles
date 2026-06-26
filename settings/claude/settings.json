@@ -23,7 +23,8 @@
   "autoCompactEnabled": false,
   "fileCheckpointingEnabled": false,
   "showTurnDuration": false,
-  "remoteControlAtStartup": true,
+  "remoteControlAtStartup": false,
   "inputNeededNotifEnabled": true,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "skipWorkflowUsageWarning": true
 }

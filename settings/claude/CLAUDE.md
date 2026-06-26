@@ -21,6 +21,9 @@
 - Check ~/dotfiles/ if some installed tools are not running
 - The Bash tool runs commands through zsh, not bash — watch for zsh builtins shadowing system binaries (e.g. `log` is a zsh builtin; call `/usr/bin/log` by full path)
 
+## Claude config files (symlinked to dotfiles)
+- `~/.claude/CLAUDE.md`, `settings.json`, `keybindings.json`, `statusline-command.sh`, and the `hooks/`, `rules/`, `skills/` dirs are symlinks into `~/dotfiles/settings/claude/`. Editing tools refuse to write through symlinks — edit the real target (`~/dotfiles/settings/claude/<file>`) directly. Changes show up as `~/dotfiles` git changes to commit.
+
 ## Permissions & Access
 - On first session in a new project, suggest setting up `.claude/settings.json` with project-specific allowed tools — analyze what commands will likely be needed and propose an `allow` list
 - If the same command type is approved more than twice, suggest adding it to `.claude/settings.json`
