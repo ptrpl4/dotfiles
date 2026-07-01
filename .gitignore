@@ -15,6 +15,7 @@ Thumbs.db
 .private-gitconfig
 .netrc
 .npmrc
+.secrets
 
 # Ignore backups
 /backups
