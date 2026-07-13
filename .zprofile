@@ -17,8 +17,6 @@ if command -v brew &>/dev/null; then
   FPATH="/opt/homebrew/share/zsh/site-functions:${FPATH}"
 fi
 
-
-
 ## Docker
 if [[ -d /Applications/Docker.app ]] || [[ -d ~/.docker/bin ]] || [[ -f /usr/local/bin/docker ]]; then
   export PATH="$HOME/.docker/bin:$PATH" # custom docker installation
