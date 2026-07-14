@@ -2,21 +2,21 @@
   "permissions": {
     "defaultMode": "acceptEdits"
   },
-  "model": "opus[1m]",
+  "model": "claude-fable-5[1m]",
   "statusLine": {
     "type": "command",
     "command": "bash $HOME/.claude/statusline-command.sh"
   },
   "enabledPlugins": {
-    "chrome-devtools-mcp@claude-plugins-official": true
   },
   "spinnerTipsEnabled": false,
-  "effortLevel": "high",
+  "effortLevel": "auto",
   "promptSuggestionEnabled": false,
   "awaySummaryEnabled": false,
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
   "prefersReducedMotion": true,
+  "skipWorkflowUsageWarning": true,
   "theme": "auto",
   "editorMode": "normal",
   "preferredNotifChannel": "auto",
@@ -25,6 +25,5 @@
   "showTurnDuration": false,
   "remoteControlAtStartup": false,
   "inputNeededNotifEnabled": true,
-  "agentPushNotifEnabled": true,
-  "skipWorkflowUsageWarning": true
+  "agentPushNotifEnabled": true
 }

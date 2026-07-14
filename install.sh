@@ -36,8 +36,17 @@ done
 # macOS app settings
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Rectangle
-  mkdir -p "${HOME}/Library/Application Support/Rectangle"
-  ln -sf "${dotfiles_dir}/settings/rectangle/RectangleConfig.json" "${HOME}/Library/Application Support/Rectangle/RectangleConfig.json"
+  rectangle_dir="${HOME}/Library/Application Support/Rectangle"
+  rectangle_src="${dotfiles_dir}/settings/rectangle/RectangleConfig.json"
+  if [[ -f "$rectangle_src" ]]; then
+    mkdir -p "$rectangle_dir"
+    if [[ -f "${rectangle_dir}/RectangleConfig.json" && ! -L "${rectangle_dir}/RectangleConfig.json" ]]; then
+      echo "Backing up Rectangle config"
+      mkdir -p "${install_backup_dir}/rectangle"
+      cp "${rectangle_dir}/RectangleConfig.json" "${install_backup_dir}/rectangle/"
+    fi
+    ln -sf "$rectangle_src" "${rectangle_dir}/RectangleConfig.json" && echo "Rectangle config linked"
+  fi
 
   # Ghostty
   ghostty_dir="${HOME}/Library/Application Support/com.mitchellh.ghostty"
@@ -50,6 +59,19 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
       cp "${ghostty_dir}/config.ghostty" "${install_backup_dir}/ghostty/"
     fi
     ln -sf "$ghostty_src" "${ghostty_dir}/config.ghostty" && echo "Ghostty config linked"
+  fi
+
+  # Sublime Merge
+  smerge_dir="${HOME}/Library/Application Support/Sublime Merge/Packages/User"
+  smerge_src="${dotfiles_dir}/settings/sublime-merge/Preferences.sublime-settings"
+  if [[ -f "$smerge_src" ]]; then
+    mkdir -p "$smerge_dir"
+    if [[ -f "${smerge_dir}/Preferences.sublime-settings" && ! -L "${smerge_dir}/Preferences.sublime-settings" ]]; then
+      echo "Backing up Sublime Merge preferences"
+      mkdir -p "${install_backup_dir}/sublime-merge"
+      cp "${smerge_dir}/Preferences.sublime-settings" "${install_backup_dir}/sublime-merge/"
+    fi
+    ln -sf "$smerge_src" "${smerge_dir}/Preferences.sublime-settings" && echo "Sublime Merge preferences linked"
   fi
 fi
 
@@ -131,7 +153,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   defaults write com.apple.screencapture location -string "${HOME}/Screenshots"
 
   # Display dimming
-  sudo pmset -a lessbright 0 # rollback - sudo pmset -b lessbright 1
+  # sudo pmset -a lessbright 0 # rollback - sudo pmset -b lessbright 1
 fi
 
 # install Homebrew packages from Brewfile
@@ -139,31 +161,34 @@ if command -v brew &>/dev/null && [[ -f "${dotfiles_dir}/Brewfile" ]]; then
   brew bundle install --file="${dotfiles_dir}/Brewfile" --no-upgrade || echo "Warning: brew bundle had errors" >&2
 fi
 
-# link Claude Code config
+# link Claude Code config (settings.json selected by CLAUDE_PROFILE in .private: "work" or "home")
 claude_dir="${HOME}/.claude"
 mkdir -p "${claude_dir}"
-for file in CLAUDE.md RTK.md statusline-command.sh settings.json keybindings.json; do
-  if [[ ! -f "${dotfiles_dir}/settings/claude/${file}" ]]; then
-    echo "Skipping Claude ${file} (not found in dotfiles)"
-    continue
-  fi
-  if [[ -f "${claude_dir}/${file}" && ! -L "${claude_dir}/${file}" ]]; then
-    echo "Backing up Claude ${file}"
-    mkdir -p "${install_backup_dir}/claude"
-    cp "${claude_dir}/${file}" "${install_backup_dir}/claude/"
-  fi
-  ln -sf "${dotfiles_dir}/settings/claude/${file}" "${claude_dir}/${file}"
-done
 
-for dir in skills rules hooks; do
-  if [[ -d "${claude_dir}/${dir}" && ! -L "${claude_dir}/${dir}" ]]; then
-    echo "Backing up Claude ${dir}/"
-    mkdir -p "${install_backup_dir}/claude"
-    cp -r "${claude_dir}/${dir}" "${install_backup_dir}/claude/"
+# symlink a file or dir into ~/.claude, backing up a pre-existing real target once
+link_claude() {
+  local src="$1" name="$2" target
+  target="${claude_dir}/${name}"
+  if [[ ! -e "$src" ]]; then
+    echo "Skipping Claude ${name} (not found: $src)"
+    return
   fi
-  ln -sfn "${dotfiles_dir}/settings/claude/${dir}" "${claude_dir}/${dir}"
+  if [[ -e "$target" && ! -L "$target" ]]; then
+    echo "Backing up Claude ${name}"
+    mkdir -p "${install_backup_dir}/claude"
+    cp -R "$target" "${install_backup_dir}/claude/"
+  fi
+  ln -sfn "$src" "$target" || echo "Warning: failed to link Claude ${name}" >&2
+}
+
+for file in CLAUDE.md statusline-command.sh keybindings.json; do
+  link_claude "${dotfiles_dir}/settings/claude/${file}" "${file}"
 done
-echo "Claude Code config linked"
+link_claude "${dotfiles_dir}/settings/claude/settings-${CLAUDE_PROFILE:-home}.json" "settings.json"
+for dir in skills rules hooks; do
+  link_claude "${dotfiles_dir}/settings/claude/${dir}" "${dir}"
+done
+echo "Claude Code config linked (profile: ${CLAUDE_PROFILE:-home})"
 
 # link Obsidian settings (vault paths defined in .private)
 if [[ ${#OBSIDIAN_VAULTS[@]} -gt 0 ]]; then

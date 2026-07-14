@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits"
+  },
+  "model": "claude-fable-5[1m]",
+  "enableWorkflows": true,
+  "workflowKeywordTriggerEnabled": false,
+  "statusLine": {
+    "type": "command",
+    "command": "bash $HOME/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "chrome-devtools-mcp@claude-plugins-official": true
+  },
+  "spinnerTipsEnabled": false,
+  "awaySummaryEnabled": false,
+  "autoUpdatesChannel": "latest",
+  "tui": "fullscreen",
+  "prefersReducedMotion": true,
+  "autoMemoryEnabled": true,
+  "skipWorkflowUsageWarning": true,
+  "theme": "auto",
+  "editorMode": "normal",
+  "preferredNotifChannel": "terminal_bell",
+  "autoCompactEnabled": false,
+  "switchModelsOnFlag": false,
+  "fileCheckpointingEnabled": false,
+  "showTurnDuration": false,
+  "remoteControlAtStartup": false,
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": false
+}

@@ -2,6 +2,11 @@
   // ============================================================================
   // EDITOR BEHAVIOR
   // ============================================================================
+  "proxy": "",
+  "text_rendering_mode": "platform_default",
+  "agent_buffer_font_size": 15.0,
+  "agent_ui_font_size": 15.0,
+  "buffer_line_height": "comfortable",
   "disable_ai": false,
   "tab_bar": {
     "show_pinned_tabs_in_separate_row": false,
@@ -50,9 +55,9 @@
   // FONTS
   // ============================================================================
   "ui_font_family": "Fira Code",
-  "ui_font_size": 16,
+  "ui_font_size": 15.0,
   "buffer_font_family": "Fira Code",
-  "buffer_font_size": 15,
+  "buffer_font_size": 15.0,
 
   // ============================================================================
   // AI FEATURES
@@ -62,6 +67,7 @@
     "mode": "subtle"
   },
   "agent": {
+    "message_editor_min_lines": 4,
     "play_sound_when_agent_done": "when_hidden",
     "notify_when_agent_waiting": "all_screens",
     "button": true,
@@ -205,7 +211,7 @@
     "git_gutter": "tracked_files",
     "hunk_style": "staged_hollow",
     "inline_blame": {
-      "show_commit_summary": false,
+      "show_commit_summary": true,
       "enabled": true
     },
     "branch_picker": {
