@@ -35,5 +35,5 @@ settings/obsidian/default/plugins/*/*.sh
 
 .claude
 
-# Work-specific Claude skills (not shared via dotfiles)
-settings/claude/skills/work-*/
+# Claude skills (machine-local, not shared via dotfiles)
+settings/claude/skills/
