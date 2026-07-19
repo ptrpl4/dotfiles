@@ -14,8 +14,8 @@ touch .private   # machine-specific config, see below
 ### `.private` variables
 
 ```bash
-# Zed editor profile: "work" or "home" (defaults to "home")
-ZED_PROFILE="home"
+# Machine profile, selects Zed/Claude settings variant: "work" or "home" (defaults to "home")
+PROFILE="home"
 
 # Obsidian vault paths for settings sync
 OBSIDIAN_VAULTS=("$HOME/path/to/vault1" "$HOME/path/to/vault2")

@@ -6,114 +6,61 @@ install_backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/$(date +%Y-%m-%d)"
 mkdir -p "${install_backup_dir}"
 echo "Backup dir created"
 
-# List of files/folders to symlink in ${HOME}
-files=(zshrc zprompt zprofile zshenv bashrc bash_prompt bash_profile aliases private gitconfig prompt_common)
-
 # dotfiles directory
 dotfiles_dir="${HOME}/dotfiles"
 
-for file in "${files[@]}"; do
-    if [[ ! -e "${dotfiles_dir}/.${file}" ]]; then
-        echo "Skipping $file (not found in dotfiles)"
-        continue
+# Back up a pre-existing real file/dir (moved into the dated backup dir),
+# then symlink src to target. Missing src is skipped.
+link_file() {
+    local src="$1" target="$2" backup_subdir="${3:-.}" name
+    name="$(basename "$target")"
+
+    if [[ ! -e "$src" ]]; then
+        echo "Skipping ${name} (not found: $src)"
+        return
     fi
 
-    if [[ -e "${HOME}/.${file}" ]]; then
-        echo "Backing up $file"
-        cp "${HOME}/.${file}" "${install_backup_dir}/"
+    mkdir -p "$(dirname "$target")"
+
+    if [[ -e "$target" && ! -L "$target" ]]; then
+        mkdir -p "${install_backup_dir}/${backup_subdir}"
+        if mv "$target" "${install_backup_dir}/${backup_subdir}/"; then
+            echo "Backed up ${name}"
+        else
+            echo "Warning: could not back up ${name}, skipping link" >&2
+            return
+        fi
     fi
 
-    if ln -sf "${dotfiles_dir}/.${file}" "${HOME}/.${file}"; then
-        echo "Linked $file"
+    if ln -sfn "$src" "$target"; then
+        echo "Linked ${name} -> ${src#"${dotfiles_dir}"/}"
     else
-        echo "Warning: failed to link $file" >&2
+        echo "Warning: failed to link ${name}" >&2
     fi
+}
+
+# Dotfiles symlinked into $HOME
+files=(zshrc zprompt zprofile zshenv bashrc bash_prompt bash_profile aliases private gitconfig prompt_common netrc npmrc)
+
+for file in "${files[@]}"; do
+    link_file "${dotfiles_dir}/.${file}" "${HOME}/.${file}"
 done
 
-# Source .private for machine-specific variables (ZED_PROFILE, OBSIDIAN_VAULTS)
+# Machine profile from .private ("work" or "home"; ZED_PROFILE/CLAUDE_PROFILE are legacy fallbacks)
 [[ -f "${dotfiles_dir}/.private" ]] && source "${dotfiles_dir}/.private"
+profile="${PROFILE:-${CLAUDE_PROFILE:-${ZED_PROFILE:-home}}}"
 
-# macOS app settings
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  # Rectangle
-  rectangle_dir="${HOME}/Library/Application Support/Rectangle"
-  rectangle_src="${dotfiles_dir}/settings/rectangle/RectangleConfig.json"
-  if [[ -f "$rectangle_src" ]]; then
-    mkdir -p "$rectangle_dir"
-    if [[ -f "${rectangle_dir}/RectangleConfig.json" && ! -L "${rectangle_dir}/RectangleConfig.json" ]]; then
-      echo "Backing up Rectangle config"
-      mkdir -p "${install_backup_dir}/rectangle"
-      cp "${rectangle_dir}/RectangleConfig.json" "${install_backup_dir}/rectangle/"
-    fi
-    ln -sf "$rectangle_src" "${rectangle_dir}/RectangleConfig.json" && echo "Rectangle config linked"
-  fi
+# App configs
+link_file "${dotfiles_dir}/settings/ghostty/config.ghostty" \
+    "${HOME}/Library/Application Support/com.mitchellh.ghostty/config.ghostty" ghostty
 
-  # Ghostty
-  ghostty_dir="${HOME}/Library/Application Support/com.mitchellh.ghostty"
-  ghostty_src="${dotfiles_dir}/settings/ghostty/config.ghostty"
-  if [[ -f "$ghostty_src" ]]; then
-    mkdir -p "$ghostty_dir"
-    if [[ -f "${ghostty_dir}/config.ghostty" && ! -L "${ghostty_dir}/config.ghostty" ]]; then
-      echo "Backing up Ghostty config"
-      mkdir -p "${install_backup_dir}/ghostty"
-      cp "${ghostty_dir}/config.ghostty" "${install_backup_dir}/ghostty/"
-    fi
-    ln -sf "$ghostty_src" "${ghostty_dir}/config.ghostty" && echo "Ghostty config linked"
-  fi
+link_file "${dotfiles_dir}/settings/sublime-merge/Preferences.sublime-settings" \
+    "${HOME}/Library/Application Support/Sublime Merge/Packages/User/Preferences.sublime-settings" sublime-merge
 
-  # Sublime Merge
-  smerge_dir="${HOME}/Library/Application Support/Sublime Merge/Packages/User"
-  smerge_src="${dotfiles_dir}/settings/sublime-merge/Preferences.sublime-settings"
-  if [[ -f "$smerge_src" ]]; then
-    mkdir -p "$smerge_dir"
-    if [[ -f "${smerge_dir}/Preferences.sublime-settings" && ! -L "${smerge_dir}/Preferences.sublime-settings" ]]; then
-      echo "Backing up Sublime Merge preferences"
-      mkdir -p "${install_backup_dir}/sublime-merge"
-      cp "${smerge_dir}/Preferences.sublime-settings" "${install_backup_dir}/sublime-merge/"
-    fi
-    ln -sf "$smerge_src" "${smerge_dir}/Preferences.sublime-settings" && echo "Sublime Merge preferences linked"
-  fi
-fi
-
-# link Zed settings (profile defined in .private: "work" or "home")
 if command -v zed >/dev/null 2>&1; then
-  echo "Zed detected. Proceeding with settings handling."
-
-  if [[ -f "${HOME}/.config/zed/settings.json" ]]; then
-    echo "Backing up Zed settings"
-    if mkdir -p "${install_backup_dir}/.config/zed"; then
-      cp "${HOME}/.config/zed/settings.json" "${install_backup_dir}/.config/zed/"
-    else
-      echo "Warning: failed to create Zed backup dir" >&2
-    fi
-  else
-    echo "No Zed settings.json found; skipping backup."
-  fi
-
-  zed_settings="${dotfiles_dir}/settings/zed/settings-${ZED_PROFILE:-home}.json"
-  if [[ -f "$zed_settings" ]]; then
-    mkdir -p "${HOME}/.config/zed"
-    ln -sf "$zed_settings" "${HOME}/.config/zed/settings.json" && \
-    echo "Zed symlink created (profile: ${ZED_PROFILE:-home})"
-  else
-    echo "Zed profile not found: $zed_settings"
-  fi
+    link_file "${dotfiles_dir}/settings/zed/settings-${profile}.json" "${HOME}/.config/zed/settings.json" .config/zed
 else
-  echo "Zed is not installed. Skipping Zed settings."
-fi
-
-# link other Run Commands
-
-if [[ -f "${dotfiles_dir}/.netrc" ]]; then
-  ln -sf "${dotfiles_dir}/.netrc" "${HOME}/.netrc"
-else
-  echo ".netrc not found in dotfiles, skipping"
-fi
-
-if [[ -f "${dotfiles_dir}/.npmrc" ]]; then
-  ln -sf "${dotfiles_dir}/.npmrc" "${HOME}/.npmrc"
-else
-  echo ".npmrc not found in dotfiles, skipping"
+    echo "Zed is not installed. Skipping Zed settings."
 fi
 
 # macOS system settings
@@ -161,59 +108,27 @@ if command -v brew &>/dev/null && [[ -f "${dotfiles_dir}/Brewfile" ]]; then
   brew bundle install --file="${dotfiles_dir}/Brewfile" --no-upgrade || echo "Warning: brew bundle had errors" >&2
 fi
 
-# link Claude Code config (settings.json selected by CLAUDE_PROFILE in .private: "work" or "home")
+# Claude Code config (settings.json selected by profile)
 claude_dir="${HOME}/.claude"
-mkdir -p "${claude_dir}"
-
-# symlink a file or dir into ~/.claude, backing up a pre-existing real target once
-link_claude() {
-  local src="$1" name="$2" target
-  target="${claude_dir}/${name}"
-  if [[ ! -e "$src" ]]; then
-    echo "Skipping Claude ${name} (not found: $src)"
-    return
-  fi
-  if [[ -e "$target" && ! -L "$target" ]]; then
-    echo "Backing up Claude ${name}"
-    mkdir -p "${install_backup_dir}/claude"
-    cp -R "$target" "${install_backup_dir}/claude/"
-  fi
-  ln -sfn "$src" "$target" || echo "Warning: failed to link Claude ${name}" >&2
-}
 
 for file in CLAUDE.md statusline-command.sh keybindings.json; do
-  link_claude "${dotfiles_dir}/settings/claude/${file}" "${file}"
+    link_file "${dotfiles_dir}/settings/claude/${file}" "${claude_dir}/${file}" claude
 done
-link_claude "${dotfiles_dir}/settings/claude/settings-${CLAUDE_PROFILE:-home}.json" "settings.json"
+link_file "${dotfiles_dir}/settings/claude/settings-${profile}.json" "${claude_dir}/settings.json" claude
 for dir in skills rules hooks; do
-  link_claude "${dotfiles_dir}/settings/claude/${dir}" "${dir}"
+    link_file "${dotfiles_dir}/settings/claude/${dir}" "${claude_dir}/${dir}" claude
 done
-echo "Claude Code config linked (profile: ${CLAUDE_PROFILE:-home})"
+echo "Claude Code config linked (profile: ${profile})"
 
-# link Obsidian settings (vault paths defined in .private)
+# Obsidian settings (vault paths defined in .private)
 if [[ ${#OBSIDIAN_VAULTS[@]} -gt 0 ]]; then
-  for vault_path in "${OBSIDIAN_VAULTS[@]}"; do
-    if [[ -d "$vault_path" ]]; then
-      local_obsidian="${vault_path}/.obsidian"
-
-      # Backup existing config if it's not already a symlink
-      if [[ -d "$local_obsidian" && ! -L "$local_obsidian" ]]; then
-        obsidian_backup="${install_backup_dir}/obsidian/$(basename "$vault_path")"
-        if [[ -d "${obsidian_backup}/.obsidian" ]]; then
-          echo "Warning: Obsidian backup already exists for $(basename "$vault_path"), skipping"
+    for vault_path in "${OBSIDIAN_VAULTS[@]}"; do
+        if [[ -d "$vault_path" ]]; then
+            link_file "${dotfiles_dir}/settings/obsidian/default" "${vault_path}/.obsidian" "obsidian/$(basename "$vault_path")"
         else
-          echo "Backing up Obsidian config for $(basename "$vault_path")"
-          mkdir -p "${obsidian_backup}"
-          mv "$local_obsidian" "${obsidian_backup}/"
+            echo "Obsidian vault not found: $vault_path, skipping"
         fi
-      fi
-
-      ln -sfn "${dotfiles_dir}/settings/obsidian/default" "$local_obsidian"
-      echo "Obsidian symlink created for $(basename "$vault_path")"
-    else
-      echo "Obsidian vault not found: $vault_path, skipping"
-    fi
-  done
+    done
 else
-  echo "No OBSIDIAN_VAULTS defined in .private, skipping Obsidian setup"
+    echo "No OBSIDIAN_VAULTS defined in .private, skipping Obsidian setup"
 fi
