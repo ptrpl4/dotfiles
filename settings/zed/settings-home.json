@@ -67,6 +67,7 @@
     "mode": "subtle"
   },
   "agent": {
+    "default_width": 740.0,
     "message_editor_min_lines": 4,
     "play_sound_when_agent_done": "when_hidden",
     "notify_when_agent_waiting": "all_screens",

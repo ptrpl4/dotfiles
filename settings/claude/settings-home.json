@@ -2,24 +2,22 @@
   "permissions": {
     "defaultMode": "acceptEdits"
   },
-  "model": "claude-fable-5[1m]",
+  "model": "fable",
   "statusLine": {
     "type": "command",
     "command": "bash $HOME/.claude/statusline-command.sh"
   },
-  "enabledPlugins": {
-  },
+  "enabledPlugins": {},
   "spinnerTipsEnabled": false,
-  "effortLevel": "auto",
   "promptSuggestionEnabled": false,
   "awaySummaryEnabled": false,
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
   "prefersReducedMotion": true,
   "skipWorkflowUsageWarning": true,
-  "theme": "auto",
+  "theme": "dark-ansi",
   "editorMode": "normal",
-  "preferredNotifChannel": "auto",
+  "preferredNotifChannel": "terminal_bell",
   "autoCompactEnabled": false,
   "fileCheckpointingEnabled": false,
   "showTurnDuration": false,
