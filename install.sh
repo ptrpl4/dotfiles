@@ -97,7 +97,11 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
   # Screenshots
   mkdir -p "${HOME}/Screenshots"
+  screencapture_before=$(defaults read com.apple.screencapture location 2>/dev/null)
   defaults write com.apple.screencapture location -string "${HOME}/Screenshots"
+  screencapture_after=$(defaults read com.apple.screencapture location 2>/dev/null)
+  # SystemUIServer caches this value; without a restart the write is ignored
+  [[ "$screencapture_before" != "$screencapture_after" ]] && killall SystemUIServer
 
   # Display dimming
   # sudo pmset -a lessbright 0 # rollback - sudo pmset -b lessbright 1
