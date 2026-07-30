@@ -1,4 +1,4 @@
 brew "git"
-brew "python@3.13"
+brew "python@3.14"
 brew "zsh"
 brew "bash"

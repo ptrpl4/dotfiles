@@ -48,8 +48,8 @@ if command -v zed &>/dev/null; then
 fi
 
 ## Python (Homebrew, keg-only)
-if [[ -d "/opt/homebrew/opt/python@3.13" ]]; then
-  export PATH="/opt/homebrew/opt/python@3.13/libexec/bin:$PATH"
+if [[ -d "/opt/homebrew/opt/python@3.14" ]]; then
+  export PATH="/opt/homebrew/opt/python@3.14/libexec/bin:$PATH"
 fi
 
 ## n (Node version manager)
