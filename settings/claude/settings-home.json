@@ -2,7 +2,7 @@
   "permissions": {
     "defaultMode": "acceptEdits"
   },
-  "model": "fable",
+  "model": "opus",
   "statusLine": {
     "type": "command",
     "command": "bash $HOME/.claude/statusline-command.sh"
