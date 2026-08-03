@@ -2,6 +2,11 @@
   // ============================================================================
   // EDITOR BEHAVIOR
   // ============================================================================
+  "agent_servers": {
+    "claude-acp": {
+      "type": "registry"
+    }
+  },
   "preferred_line_length": 100,
   "soft_wrap": "none",
   "tab_bar": {
@@ -76,8 +81,10 @@
     ],
     "default_profile": "write",
     "default_model": {
-      "provider": "google",
-      "model": "gemini-3-flash-preview"
+      "effort": "high",
+      "enable_thinking": true,
+      "provider": "anthropic",
+      "model": "claude-opus-5"
     }
   },
 
