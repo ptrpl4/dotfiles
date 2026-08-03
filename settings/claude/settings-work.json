@@ -2,7 +2,7 @@
   "permissions": {
     "defaultMode": "acceptEdits"
   },
-  "model": "claude-fable-5[1m]",
+  "model": "opus[1m]",
   "enableWorkflows": true,
   "workflowKeywordTriggerEnabled": false,
   "statusLine": {
@@ -25,8 +25,8 @@
   "autoCompactEnabled": false,
   "switchModelsOnFlag": false,
   "fileCheckpointingEnabled": false,
-  "showTurnDuration": false,
+  "showTurnDuration": true,
   "remoteControlAtStartup": false,
-  "inputNeededNotifEnabled": true,
+  "inputNeededNotifEnabled": false,
   "agentPushNotifEnabled": false
 }
