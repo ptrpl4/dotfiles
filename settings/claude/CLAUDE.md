@@ -22,10 +22,13 @@
 
 ## ENV
 - Package manager: follow the `packageManager` field or lock files
-- Bash tool runs through **zsh** — watch for builtins shadowing binaries (`log` → call `/usr/bin/log`)
+- Bash tool runs through **zsh**, non-interactively. `/etc/zshrc` (interactive-only) is what runs `disable log`, and the session snapshot doesn't replay it — so `log` is a live builtin here and shadows the binary. Call `/usr/bin/log` explicitly; suspect the same for any other name zsh builds in
 - Terminal host is Zed's integrated terminal or Ghostty; `EDITOR` is `zed --wait`, so editor-opening commands block until the tab closes — prefer `git commit -m`, `GIT_EDITOR=true`
 - macOS TCC: touching `~/Desktop`, `~/Documents`, `~/Downloads`, `~/Library`, `~/Pictures` pops a GUI dialog attributed to the host app and invisible from the terminal — exclude those paths from `find`/`grep` sweeps
 - `.zprofile` is login-shell-only — PATH edits don't reach the running terminal; verify in a new one
+- PATH is frozen per session: the Bash tool replays `~/.claude/shell-snapshots/snapshot-zsh-*.sh`, which ends in a literal `export PATH=…` captured at session start. A newly added PATH entry needs a restarted session; switching versions in place (`n <ver>`) works fine
+- `docker` is an **alias to podman** and no Docker binary exists — `command -v docker` returns only the alias. Compose/buildx/socket behavior differs from Docker; don't assume Docker semantics
+- `~/dotfiles/bin` is first on PATH — the right place for shims and small CLIs (aliases also survive into the snapshot, but only for zsh)
 - If an installed tool seems missing, check `~/dotfiles/`
 
 ## Claude config
