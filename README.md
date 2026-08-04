@@ -31,10 +31,32 @@ Override git identity per machine. Included by `.gitconfig` automatically.
     email = work@company.com
 ```
 
+### Shell config layout
+
+Which file a setting belongs in is decided by when the shell reads it, not by topic.
+
+| File | Read by | Holds |
+|---|---|---|
+| `.zshenv` | every zsh, including `zsh -c` | `N_PREFIX`, PATH entries non-login shells need |
+| `.zprofile` | login zsh, **after** `path_helper` | re-prepends what `path_helper` demoted |
+| `.zshrc` | interactive zsh | history, `setopt`, completions, prompt, aliases |
+| `.bashrc` | interactive bash, `bash -l`, `ssh host 'cmd'` | env above the guard, interactive below |
+
+`/etc/zprofile` and `/etc/profile` run `/usr/libexec/path_helper`, which rebuilds
+PATH from `/etc/paths` + `/etc/paths.d/*` and appends the existing value — so
+`.zshenv` entries land at the tail in login shells. Anything that must outrank the
+system directories is re-prepended in `.zprofile`. Currently that is only `n`.
+
+Bash never reads `.bashrc` for `bash -c` or `make`, and has no `.zshenv`
+equivalent, so those shells inherit PATH from their parent or get nothing.
+
 ### Troubleshooting
 
 - Check `~/dotfiles/backups` — previous versions of overwritten files are saved there
-- n and Docker are expected to be installed
+- Node missing in a Makefile or editor terminal → check `.zshenv`, not `.zprofile`
+- Verify a shell change in a clean shell: `env -i HOME="$HOME" TERM=xterm zsh -lc 'print -l $path'`
+- `docker` is an alias to podman (set in `.private`) — no Docker binary is installed or expected
+- `n` comes from the Brewfile, but installs no Node runtime — run `n lts` once on a new machine
 
 ## Tools
 
