@@ -22,7 +22,10 @@
 
 ## ENV
 - Package manager: follow the `packageManager` field or lock files
-- Bash tool runs through **zsh**, non-interactively. `/etc/zshrc` (interactive-only) is what runs `disable log`, and the session snapshot doesn't replay it — so `log` is a live builtin here and shadows the binary. Call `/usr/bin/log` explicitly; suspect the same for any other name zsh builds in
+- Bash tool runs through **zsh** — watch for builtins shadowing binaries (`log` → call `/usr/bin/log`)
+- BSD userland: `sed -i ''` (empty arg), `sed -E` not `-r`, `stat -f` not `-c`, no `date -d`, no `find -printf`; GNU only as `gdate`/`gstat`. `launchctl` not `systemctl`, `lsof -i -P` not `ss`, `open` not `xdg-open`, `shasum` not `sha256sum`, no `/proc`
+- Bash-tool `grep`/`find` are ugrep-backed shims so `-P` works; `/usr/bin/grep` is BSD and has no `-P` — don't rely on it in scripts
+- Homebrew prefix is `/opt/homebrew`
 - Terminal host is Zed's integrated terminal or Ghostty; `EDITOR` is `zed --wait`, so editor-opening commands block until the tab closes — prefer `git commit -m`, `GIT_EDITOR=true`
 - macOS TCC: touching `~/Desktop`, `~/Documents`, `~/Downloads`, `~/Library`, `~/Pictures` pops a GUI dialog attributed to the host app and invisible from the terminal — exclude those paths from `find`/`grep` sweeps
 - `.zprofile` is login-shell-only — PATH edits don't reach the running terminal; verify in a new one
