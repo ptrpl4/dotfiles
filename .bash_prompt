@@ -14,7 +14,7 @@ PS1+='$(prompt_exit_status)'
 PS1+='$(prompt_jobs_box)'
 PS1+='\n'
 PS1+='\[${gray}\]└─>\[${reset}\] '
-export PS1
 
 PS2='\[${gray}\]───>\[${reset}\] '
-export PS2
+
+# Deliberately not exported — see the note in .zprompt.

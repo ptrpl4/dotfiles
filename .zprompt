@@ -10,7 +10,10 @@ PS1+="\$(prompt_exit_status)"
 PS1+="\$(prompt_jobs_box)"
 PS1+=$'\n'
 PS1+="%{${gray}%}└─>%{${reset}%} "
-export PS1
 
 PS2="%{${gray}%}───>%{${reset}%} "
-export PS2
+
+# Deliberately not exported: prompts are shell-local. An exported PS1 renders as
+# literal zsh escapes in interactive bash children, and defeats the
+# `if [ -z "$PS1" ]; then return; fi` interactivity guard that this machine's own
+# /etc/bashrc opens with (Debian's /etc/bash.bashrc uses the same test).
