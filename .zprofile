@@ -52,9 +52,14 @@ if [[ -d "/opt/homebrew/opt/python@3.14" ]]; then
   export PATH="/opt/homebrew/opt/python@3.14/libexec/bin:$PATH"
 fi
 
-## n (Node version manager)
-export N_PREFIX="$HOME/.n"
-export PATH="$N_PREFIX/bin:$PATH"
+## n (Node version manager) — N_PREFIX is set in .zshenv so node resolves in every
+## shell. Re-prepend here because path_helper (/etc/zprofile, login shells only)
+## rebuilds PATH system-dirs-first and appends .zshenv's entries at the tail, which
+## would let a stray /usr/local/bin/node or a brew formula's node win. `typeset -U`
+## drops the demoted duplicate.
+## The -n test matters: unset N_PREFIX would make this `[[ -d "/bin" ]]`, putting
+## /bin at the head of PATH (fires on a fresh clone, before .zshenv is symlinked).
+[[ -n "$N_PREFIX" && -d "$N_PREFIX/bin" ]] && path=("$N_PREFIX/bin" $path)
 
 ## local binaries (pipx, poetry, etc.)
 export PATH="$HOME/.local/bin:$PATH"
