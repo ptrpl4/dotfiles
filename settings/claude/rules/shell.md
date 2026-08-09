@@ -85,11 +85,20 @@ stale. `readlink ~/.zshrc` if a config change stops tracking.
   replace `date`, an exit-code hook and a `jobs` pipeline at zero cost
 - Colour must be width-marked or the line wraps early and redraws wrong. `%{ %}`
   and `\[ \]` only work on text the shell expanded itself — raw escapes reaching
-  PS1 through `$(...)` are counted as printable. Emit `%F{8}`/`%f` in zsh (build
-  PS1 in `precmd`), and `\001`/`\002` in bash, which processes `\[ \]` *before*
-  command substitution
+  PS1 through `$(...)` are counted as printable. Build PS1 in `precmd` for zsh,
+  and use `\001`/`\002` in bash, which processes `\[ \]` *before* command
+  substitution
+- Write colour as a literal SGR (`%{\e[90m%}`), not `%F{8}`: `%F` resolves
+  through terminfo, so at 8 colours it silently degrades to `%f`, and with no
+  terminfo entry at all (`xterm-ghostty`) it emits a bare `\e[38m`
 - `%`-escape anything interpolated into a zsh prompt (`${var//\%/%%}`) — a
   branch named `100%off` otherwise injects prompt escapes
 - `tput` errors when `TERM` is unset; keep it below the interactive guard
+- Git in a prompt: `for-each-ref` reads refs only and is flat in worktree size.
+  `git status` looks cheaper but refreshes the index — ~12 ms warm, ~290 ms on a
+  2500-file repo with stale stat data, i.e. right after a checkout or build.
+  `%(upstream:track)` is not localised, so parsing `ahead`/`behind` is safe
 - Verify with `env -i HOME="$HOME" TERM=xterm zsh -lc '...'` so nothing leaks in
-  from the parent. `-lc` / `-c` / `-ic` hit login, non-login, interactive
+  from the parent. `-lc` / `-c` / `-ic` hit login, non-login, interactive. None
+  of them render a prompt — to see PS1 as precmd builds it, drive a real
+  interactive shell: `printf 'exit\n' | script -q out.log zsh -li`

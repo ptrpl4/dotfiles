@@ -93,8 +93,9 @@ Deleting a session also removes its `~/.claude/file-history/<id>/` directory.
 ```
 
 Clock, working directory, git branch with sync status (✓ synced, ↑ ahead,
-↓ behind), and — zsh only — last exit code and background job count. Colours
-use palette slot 8, so they follow the terminal theme.
+↓ behind, `gone` if the upstream was deleted), and — zsh only — last exit code
+and background job count. Grey is ANSI bright black, so the shade comes from
+the terminal theme.
 
 Everything except the git segment is a native prompt escape (`%D`, `%(?..)`,
 `%(1j..)`), so the only work per prompt is one `git for-each-ref` — refs only,
