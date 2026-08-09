@@ -121,9 +121,15 @@ if [[ -n $model ]]; then
         max) label=max ;; auto) label=auto ;; *) label='' ;;
     esac
     warn=''
-    model_lc=${model,,}
-    [[ $model_lc == *opus*  && $effort == low ]] && warn='!'
-    [[ $model_lc == *haiku* && ( $effort == high || $effort == max ) ]] && warn='!'
+    # nocasematch rather than ${model,,}: case conversion is bash 4+, and this
+    # script runs under whatever `bash` Claude Code's PATH resolves to — 3.2
+    # when the app is launched from the Dock rather than a terminal. There the
+    # bad substitution aborts the rest of this block, silently dropping the
+    # abbreviation and the effort label.
+    shopt -s nocasematch
+    [[ $model == *opus*  && $effort == low ]] && warn='!'
+    [[ $model == *haiku* && ( $effort == high || $effort == max ) ]] && warn='!'
+    shopt -u nocasematch
     # "Sonnet 4.6" -> "So-4.6"
     if [[ $model == *' '* ]]; then
         model="${model:0:2}-${model#* }"
@@ -154,7 +160,10 @@ if [[ -n $rl5h || -n $rl7d ]]; then
     (( max_rl >= 88 )) && rl_color=$red
     limits="${rl_color}${rl5h:-?}/${rl7d:-?}%${gray}"
     if [[ -n $rl5h_reset ]]; then
-        (( diff = rl5h_reset - EPOCHSECONDS ))
+        # EPOCHSECONDS is bash 5+; unset it evaluates to 0 and the countdown
+        # becomes the raw epoch. Fall back to a fork only where it is missing.
+        now=${EPOCHSECONDS:-$(date +%s)}
+        (( diff = rl5h_reset - now ))
         (( diff > 0 )) && limits+=" ↺$(( diff / 60 ))m"
     fi
     sep; printf '%s%s' "$reset" "$limits"
