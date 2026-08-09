@@ -1,0 +1,9 @@
+# Login zsh, read after /etc/zprofile — which runs path_helper, rebuilding PATH
+# from /etc/paths{,.d} and appending the old value, so everything zshenv set has
+# just been demoted to the tail. Re-source to re-assert the order.
+source "${DOTFILES:-$HOME/dotfiles}/shell/path.sh"
+
+if command -v zed &>/dev/null; then
+  export EDITOR="zed --wait"
+  export VISUAL="zed --wait"
+fi

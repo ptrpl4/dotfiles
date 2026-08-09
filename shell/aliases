@@ -1,0 +1,6 @@
+# shell
+alias reload='exec $SHELL -l'
+alias cs='claude-sessions'
+
+## multiuser 'support'
+brew-fix() { sudo chown -R "$(whoami)" /opt/homebrew; }

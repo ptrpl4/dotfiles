@@ -1,3 +1,5 @@
+# Interactive zsh only.
+
 # Start profiling
 if [[ -n $PROFILE_STARTUP ]]; then
   zmodload zsh/zprof
@@ -19,6 +21,20 @@ setopt EXTENDED_HISTORY
 # Shell behavior
 setopt CORRECT
 setopt INTERACTIVE_COMMENTS
+
+# Completions — interactive-only, so they live here rather than in .zprofile.
+# fpath must be extended before compinit runs.
+if [[ -d /opt/homebrew/share/zsh/site-functions ]]; then
+  fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
+fi
+
+autoload -Uz compinit
+# Only rebuild the completion cache once a day
+if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qNmh-24) ]]; then
+  compinit -C  # Skip security check, use cached
+else
+  compinit     # Rebuild cache
+fi
 
 for file in ~/.{zprompt,aliases,private}; do
   [[ -r "$file" ]] && source "$file"

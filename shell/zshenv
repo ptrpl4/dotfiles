@@ -1,0 +1,4 @@
+# Every zsh — interactive or not, login or not. Keep minimal and silent;
+# output here breaks scp and rsync.
+typeset -U path PATH
+source "${DOTFILES:-$HOME/dotfiles}/shell/path.sh"

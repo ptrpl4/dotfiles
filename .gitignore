@@ -11,7 +11,7 @@ Thumbs.db
 .Trashes
 
 # Private Information
-.private
+shell/private
 .private-gitconfig
 .netrc
 .npmrc

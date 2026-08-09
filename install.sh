@@ -39,15 +39,21 @@ link_file() {
     fi
 }
 
-# Dotfiles symlinked into $HOME
-files=(zshrc zprompt zprofile zshenv bashrc bash_prompt bash_profile aliases private gitconfig prompt_common netrc npmrc)
+# Shell config: lives in shell/ without a leading dot, linked into $HOME with one.
+# path.sh is sourced by the others, not linked.
+shell_files=(zshenv zprofile zshrc zprompt bashrc bash_profile bash_prompt aliases prompt_common private)
 
-for file in "${files[@]}"; do
+for file in "${shell_files[@]}"; do
+    link_file "${dotfiles_dir}/shell/${file}" "${HOME}/.${file}"
+done
+
+# Still at the repo root
+for file in gitconfig netrc npmrc; do
     link_file "${dotfiles_dir}/.${file}" "${HOME}/.${file}"
 done
 
-# Machine profile from .private ("work" or "home"; ZED_PROFILE/CLAUDE_PROFILE are legacy fallbacks)
-[[ -f "${dotfiles_dir}/.private" ]] && source "${dotfiles_dir}/.private"
+# Machine profile from shell/private ("work" or "home"; ZED_PROFILE/CLAUDE_PROFILE are legacy fallbacks)
+[[ -f "${dotfiles_dir}/shell/private" ]] && source "${dotfiles_dir}/shell/private"
 profile="${PROFILE:-${CLAUDE_PROFILE:-${ZED_PROFILE:-home}}}"
 
 # App configs

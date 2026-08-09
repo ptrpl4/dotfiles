@@ -1,0 +1,18 @@
+# Compatibility path only — the interactive shell here is zsh. Read for
+# interactive bash, `bash -l`, and `ssh host 'cmd'` where bash is the login
+# shell; not for `bash -c` or `make`, which have no .zshenv equivalent.
+source "${DOTFILES:-$HOME/dotfiles}/shell/path.sh"
+export BASH_SILENCE_DEPRECATION_WARNING=1
+
+# ─── Interactive only ─────────────────────────────────────────────────────────
+[[ $- != *i* ]] && return
+
+HISTSIZE=10000
+HISTFILESIZE=10000
+HISTCONTROL=ignoreboth  # skip dupes + space-prefixed
+shopt -s histappend
+
+for file in ~/.{bash_prompt,aliases,private}; do
+    [[ -r "$file" ]] && source "$file"
+done
+unset file

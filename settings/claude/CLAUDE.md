@@ -28,11 +28,11 @@
 - Homebrew prefix is `/opt/homebrew`
 - Terminal host is Zed's integrated terminal or Ghostty; `EDITOR` is `zed --wait`, so editor-opening commands block until the tab closes — prefer `git commit -m`, `GIT_EDITOR=true`
 - macOS TCC: touching `~/Desktop`, `~/Documents`, `~/Downloads`, `~/Library`, `~/Pictures` pops a GUI dialog attributed to the host app and invisible from the terminal — exclude those paths from `find`/`grep` sweeps
-- `.zprofile` is login-shell-only — PATH edits don't reach the running terminal; verify in a new one
-- PATH is frozen per session: the Bash tool replays `~/.claude/shell-snapshots/snapshot-zsh-*.sh`, which ends in a literal `export PATH=…` captured at session start. A newly added PATH entry needs a restarted session; switching versions in place (`n <ver>`) works fine
-- `docker` is an **alias to podman** and no Docker binary exists — `command -v docker` returns only the alias. Compose/buildx/socket behavior differs from Docker; don't assume Docker semantics
-- `~/dotfiles/bin` is first on PATH — the right place for shims and small CLIs (aliases also survive into the snapshot, but only for zsh)
-- If an installed tool seems missing, check `~/dotfiles/`
+- All PATH construction is in `~/dotfiles/shell/path.sh`, sourced by every shell — add entries there, never to a per-shell rc file
+- PATH is frozen per session: the Bash tool replays `~/.claude/shell-snapshots/snapshot-bash-*.sh`, which ends in a literal `export PATH=…` captured at session start. A newly added PATH entry needs a restarted session; switching versions in place (`n <ver>`) works fine
+- **No aliases** — the snapshot opens with `unalias -a`, so nothing from `shell/aliases` or `shell/private` exists here. Notably `docker` is an alias to podman and no Docker binary is installed, so call `podman` directly and don't assume Docker compose/buildx/socket semantics
+- `~/dotfiles/bin` is first on PATH — the right place for shims and small CLIs, and unlike an alias it survives into this shell
+- If an installed tool seems missing, check `~/dotfiles/shell/path.sh`; don't assume a given tool is present on this machine
 
 ## Claude config
 - `~/.claude/{CLAUDE.md,settings.json,keybindings.json,statusline-command.sh}` and `hooks/`, `rules/`, `skills/` are symlinks into `~/dotfiles/settings/claude/`. Editing tools refuse to write through symlinks — edit the real target; changes surface as `~/dotfiles` git changes

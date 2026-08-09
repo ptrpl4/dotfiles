@@ -1,86 +1,84 @@
 ---
 paths:
   - "**/*.sh"
-  - "**/.aliases"
-  - "**/.bashrc"
-  - "**/.bash_profile"
-  - "**/.bash_prompt"
+  - "shell/*"
   - "**/.zshrc"
   - "**/.zprofile"
   - "**/.zshenv"
-  - "**/.zprompt"
-  - "**/.prompt_common"
 ---
 
 # Shell File Rules
 
 ## Style
 
-- Use `bash` for scripts, `zsh` for interactive config
+- `bash` for scripts, `zsh` for interactive config
 - Prefer functions over aliases when the body uses `$()` or arguments
-- Quote all variable expansions: `"$var"`, `"$(cmd)"`
-- Use `[[ ]]` in zsh/bash, `[ ]` only for POSIX sh compatibility
-- Use `local` for all function-scoped variables
+- Quote all expansions: `"$var"`, `"$(cmd)"`. `local` for function-scoped vars
+- `[[ ]]` in zsh/bash, `[ ]` only where POSIX sh matters
 
 ## Startup order
 
-Verified against `man zshall` (STARTUP/SHUTDOWN FILES), `man bash` (INVOCATION),
-and this machine's `/etc/*` files.
-
-**zsh** — `/etc/zshenv` → `~/.zshenv` → *[login]* `/etc/zprofile` → `~/.zprofile`
-→ *[interactive]* `/etc/zshrc` → `~/.zshrc` → *[login]* `/etc/zlogin`.
-On macOS `/etc/zshenv` and `/etc/zlogin` do not exist; `/etc/zprofile` only sets a
+`/etc/zshenv` → `~/.zshenv` → *[login]* `/etc/zprofile` → `~/.zprofile` →
+*[interactive]* `/etc/zshrc` → `~/.zshrc` → *[login]* `/etc/zlogin`.
+On macOS `/etc/zshenv` and `/etc/zlogin` don't exist; `/etc/zprofile` sets a
 `LANG` default and runs `path_helper`.
-
-**bash** — reads `~/.bashrc` in exactly three cases: interactive shells, login
-shells via `~/.bash_profile` (`bash -l`, `bash -lc`), and `ssh host 'cmd'` when
-bash is the login shell (stdin is a socket). It does **not** read it for `bash -c`
-or `make`. `BASH_ENV` applies only to non-interactive shells and is not inherited
-into `make`, so it is not a usable substitute. There is no bash equivalent of
-`.zshenv` — accept the gap rather than papering over it.
 
 ## Where things belong
 
+Config lives in `~/dotfiles/shell/` without a leading dot; `install.sh` links
+`shell/zshrc` → `~/.zshrc` and so on.
+
 | Goes in | What |
 |---|---|
-| `.zshenv` | env that every zsh needs — `N_PREFIX`, PATH entries for non-login shells. Keep small; `zsh -f` skips it |
-| `.zprofile` | only what must run **after** `path_helper` (see below) |
-| `.zshrc` | anything interactive: history, `setopt`, `compinit`/`fpath`, prompt, aliases |
-| `.bashrc` above the guard | bash env/PATH |
-| `.bashrc` below the guard | history, prompt, completions |
+| `path.sh` | **every** PATH entry, plus env PATH depends on (`N_PREFIX`) |
+| `zshenv` | env every zsh needs. Small and silent; `zsh -f` skips it |
+| `zprofile` | only what must run **after** `path_helper` |
+| `zshrc` | interactive: history, `setopt`, `compinit`/`fpath`, prompt, aliases |
 
-## PATH and `path_helper`
+The `bash*` files are a compatibility shim for agent tooling and bash-login
+hosts. Nothing belongs there that isn't already in `path.sh`.
 
-`/etc/zprofile` (zsh login) and `/etc/profile` (bash login) both run
-`/usr/libexec/path_helper`. It does **not** prepend: it rebuilds PATH from
-`/etc/paths` + `/etc/paths.d/*`, then appends whatever was already there. So
-anything set in `.zshenv` lands at the *tail* in login shells.
+## PATH
 
-- A directory that must outrank the system dirs has to be re-prepended in
-  `.zprofile`, which runs after `path_helper`. Only `n` needs this; podman is in
-  `/etc/paths.d` and nothing competes with it
-- zsh: `typeset -U path PATH` + prepend = move-to-front, since `-U` keeps the
-  first occurrence and drops the demoted duplicate
-- bash has no `typeset -U`. A PATH helper must **remove-then-add**, never
-  "skip if already present" — in a login shell `path_helper` has already inserted
-  `/opt/homebrew/bin` mid-PATH, and skipping strands it behind `/usr/local/bin`
-- Guard `$VAR/bin` tests with `-n`: unset `N_PREFIX` turns `[[ -d "$N_PREFIX/bin" ]]`
-  into `[[ -d "/bin" ]]`, which is true and puts `/bin` at the head of PATH
+Everything is in `path.sh`, sourced by `zshenv` and again by `zprofile`.
+Sourcing runs it; helpers are remove-then-add, so re-sourcing re-asserts order
+instead of duplicating. Add entries there — anything added to `zshrc` alone is
+invisible to `zsh -c`, Makefiles, and agent tooling.
+
+It's shared, so no zsh-only syntax (arrays, `typeset -U`), and it runs on every
+zsh, so use parameter expansion over forking `sed`.
+
+`path_helper` (from `/etc/zprofile`) does **not** prepend: it rebuilds PATH from
+`/etc/paths` + `/etc/paths.d/*`, then appends the old value.
+
+- So `zshenv` entries land at the *tail* in login shells → `zprofile` re-sources
+- And `/etc/paths.d` tools are missing entirely from **non**-login shells →
+  re-add them in `path.sh` so every shell agrees
+- Helpers must **remove-then-add**, never skip-if-present: `path_helper` has
+  already put `/opt/homebrew/bin` mid-PATH, and skipping strands it there
+- Guard `$VAR/bin` with `-n` — unset `N_PREFIX` turns `[ -d "$N_PREFIX/bin" ]`
+  into `[ -d "/bin" ]`, putting `/bin` at the head
+- Keg-only Homebrew formulae need their `libexec/bin` for the unversioned name
+
+### Installers that edit rc files
+
+They append `export PATH=` to some rc file and win by running last — usually
+correct. Hoist the line into `path.sh` if it should reach non-interactive shells.
+
+The rc files are symlinks into the repo, so the write style matters: `>>` follows
+the link and shows as a git diff; BSD `sed -i` refuses outright; **write-temp-
+then-`mv` replaces the symlink with a regular file** and the repo copy goes
+stale. `readlink ~/.zshrc` if a config change stops tracking.
 
 ## Gotchas
 
-- **Never `export PS1`/`PS2`.** An exported `PS1` renders as literal zsh escapes in
-  interactive bash children, and defeats the `[ -z "$PS1" ] && return` guard that
-  both this machine's `/etc/bashrc` and Debian's `/etc/bash.bashrc` open with
-- `/etc/zshrc` runs `disable log`, but it is interactive-only — in a
-  non-interactive zsh the `log` builtin shadows `/usr/bin/log`
-- Prompt hooks: use `add-zsh-hook precmd fn` and append to `PROMPT_COMMAND`.
-  Plain `precmd() {...}` / `PROMPT_COMMAND=...` get silently clobbered by direnv,
-  zoxide, atuin, mise
-- `tput` in a prompt file errors when `TERM` is unset; keep it below the
-  interactive guard
-- Two bash binaries exist here: `/bin/bash` 3.2.57 (Apple) and
-  `/opt/homebrew/bin/bash` 5.x. Test PATH changes against both
-- Verify shell startup with `env -i HOME="$HOME" TERM=xterm zsh -lc '...'` so
-  nothing leaks in from the parent shell. Use `-lc` / `-c` / `-ic` to hit login,
-  non-login, and interactive paths separately
+- **Never `export PS1`/`PS2`.** Prompts are shell-local: an exported `PS1` renders
+  as literal escapes in child shells of another flavour, and defeats the
+  `[ -z "$PS1" ] && return` guard that system rc files open with
+- `/etc/zshrc` runs `disable log`, but interactive-only — in a non-interactive
+  zsh the `log` builtin shadows `/usr/bin/log`
+- Prompt hooks: `add-zsh-hook precmd fn`, and append to `PROMPT_COMMAND`. Plain
+  `precmd() {...}` / `PROMPT_COMMAND=...` get clobbered by direnv, zoxide, mise
+- `tput` errors when `TERM` is unset; keep it below the interactive guard
+- Verify with `env -i HOME="$HOME" TERM=xterm zsh -lc '...'` so nothing leaks in
+  from the parent. `-lc` / `-c` / `-ic` hit login, non-login, interactive

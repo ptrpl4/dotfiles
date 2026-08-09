@@ -7,11 +7,11 @@ Based on [mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles) and
 
 ```bash
 git clone git@github.com:ptrpl4/dotfiles.git ~/dotfiles && cd ~/dotfiles
-touch .private   # machine-specific config, see below
+touch shell/private   # machine-specific config, see below
 make install
 ```
 
-### `.private` variables
+### `shell/private` variables
 
 ```bash
 # Machine profile, selects Zed/Claude settings variant: "work" or "home" (defaults to "home")
@@ -33,30 +33,38 @@ Override git identity per machine. Included by `.gitconfig` automatically.
 
 ### Shell config layout
 
-Which file a setting belongs in is decided by when the shell reads it, not by topic.
+Files live in `shell/` without a leading dot; `install.sh` links `shell/zshrc` →
+`~/.zshrc` and so on. Which file a setting belongs in is decided by when the
+shell reads it, not by topic.
 
 | File | Read by | Holds |
 |---|---|---|
-| `.zshenv` | every zsh, including `zsh -c` | `N_PREFIX`, PATH entries non-login shells need |
-| `.zprofile` | login zsh, **after** `path_helper` | re-prepends what `path_helper` demoted |
-| `.zshrc` | interactive zsh | history, `setopt`, completions, prompt, aliases |
-| `.bashrc` | interactive bash, `bash -l`, `ssh host 'cmd'` | env above the guard, interactive below |
+| `path.sh` | sourced by the others | **every** PATH entry, and `N_PREFIX` |
+| `zshenv` | every zsh, including `zsh -c` | sources `path.sh`; minimal and silent |
+| `zprofile` | login zsh, **after** `path_helper` | re-sources `path.sh`; `EDITOR` |
+| `zshrc` | interactive zsh | history, `setopt`, completions, prompt, aliases |
 
-`/etc/zprofile` and `/etc/profile` run `/usr/libexec/path_helper`, which rebuilds
-PATH from `/etc/paths` + `/etc/paths.d/*` and appends the existing value — so
-`.zshenv` entries land at the tail in login shells. Anything that must outrank the
-system directories is re-prepended in `.zprofile`. Currently that is only `n`.
+PATH is built in one place so interactive shells, `zsh -c`, Makefiles and agent
+tooling all agree. `path_helper` (run by `/etc/zprofile`) rebuilds PATH from
+`/etc/paths` + `/etc/paths.d/*` and appends the old value, which cuts both ways:
+`zshenv` entries get demoted to the tail in login shells, and `/etc/paths.d`
+tools are absent from non-login ones. Hence `zprofile` re-sources, and those
+entries are re-added in `path.sh`.
 
-Bash never reads `.bashrc` for `bash -c` or `make`, and has no `.zshenv`
-equivalent, so those shells inherit PATH from their parent or get nothing.
+The `bash*` files are a compatibility shim for agent tooling and bash-login
+hosts, not part of the setup.
+
+Installers append to whichever rc file they pick and win by running last. Move
+the line into `path.sh` if it should also reach non-interactive shells.
 
 ### Troubleshooting
 
 - Check `~/dotfiles/backups` — previous versions of overwritten files are saved there
-- Node missing in a Makefile or editor terminal → check `.zshenv`, not `.zprofile`
-- Verify a shell change in a clean shell: `env -i HOME="$HOME" TERM=xterm zsh -lc 'print -l $path'`
-- `docker` is an alias to podman (set in `.private`) — no Docker binary is installed or expected
-- `n` comes from the Brewfile, but installs no Node runtime — run `n lts` once on a new machine
+- A tool missing in a Makefile, editor terminal or agent shell → add it to `shell/path.sh`, not to a per-shell file
+- Verify a shell change in a clean shell: `env -i HOME="$HOME" TERM=xterm zsh -lc 'print -l $path'`. Use `-c` / `-ic` for the non-login and interactive paths
+- Config change stopped tracking? `readlink ~/.zshrc` — an installer that writes-temp-then-renames replaces the symlink with a regular file
+- Aliases are interactive-only, so anything defined in `shell/aliases` or `shell/private` is absent from scripts and agent shells
+- `n` comes from the Brewfile but installs no Node runtime — run `n lts` once on a new machine
 
 ## Tools
 
