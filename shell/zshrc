@@ -5,9 +5,6 @@ if [[ -n $PROFILE_STARTUP ]]; then
   zmodload zsh/zprof
 fi
 
-autoload -Uz colors && colors
-setopt PROMPT_SUBST
-
 # History
 HISTSIZE=10000
 SAVEHIST=10000

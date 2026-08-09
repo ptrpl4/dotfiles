@@ -84,6 +84,17 @@ Deleting a session also removes its `~/.claude/file-history/<id>/` directory.
 
 ## Prompt
 
-Features:
-- Git branch with sync status (✓ synced, ↑ ahead, ↓ behind)
-- Auto-adaptive colors (switches with terminal theme)
+```
+┌─[14:48]─[user]─[dotfiles]─[git:master:↑2]─[err 7]─[jobs 1]
+└─>
+```
+
+Clock, working directory, git branch with sync status (✓ synced, ↑ ahead,
+↓ behind), and — zsh only — last exit code and background job count. Colours
+use palette slot 8, so they follow the terminal theme.
+
+Everything except the git segment is a native prompt escape (`%D`, `%(?..)`,
+`%(1j..)`), so a prompt costs exactly one `git status --porcelain=v2 --branch`.
+`shell/prompt_common` holds that call and returns plain text; `zprompt` and
+`bash_prompt` add their own colours, since the two shells mark non-printing
+characters differently (`%F{}` vs `\001`/`\002`).

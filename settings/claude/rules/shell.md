@@ -79,6 +79,15 @@ stale. `readlink ~/.zshrc` if a config change stops tracking.
   zsh the `log` builtin shadows `/usr/bin/log`
 - Prompt hooks: `add-zsh-hook precmd fn`, and append to `PROMPT_COMMAND`. Plain
   `precmd() {...}` / `PROMPT_COMMAND=...` get clobbered by direnv, zoxide, mise
+- Prefer prompt escapes to forks: `%D{%H:%M}`/`\A`, `%(?..)`, `%(1j..)`/`\j`
+  replace `date`, an exit-code hook and a `jobs` pipeline at zero cost
+- Colour must be width-marked or the line wraps early and redraws wrong. `%{ %}`
+  and `\[ \]` only work on text the shell expanded itself — raw escapes reaching
+  PS1 through `$(...)` are counted as printable. Emit `%F{8}`/`%f` in zsh (build
+  PS1 in `precmd`), and `\001`/`\002` in bash, which processes `\[ \]` *before*
+  command substitution
+- `%`-escape anything interpolated into a zsh prompt (`${var//\%/%%}`) — a
+  branch named `100%off` otherwise injects prompt escapes
 - `tput` errors when `TERM` is unset; keep it below the interactive guard
 - Verify with `env -i HOME="$HOME" TERM=xterm zsh -lc '...'` so nothing leaks in
   from the parent. `-lc` / `-c` / `-ic` hit login, non-login, interactive

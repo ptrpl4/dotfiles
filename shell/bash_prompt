@@ -1,20 +1,23 @@
 source "${HOME}/.prompt_common"
 
-# Box drawing character style prompt for Bash
-PS1='\n'
-PS1+='\[${gray}\]┌─'
-PS1+='$(prompt_time)'
-PS1+='\[${gray}\]─[\[${reset}\]'
-PS1+='\u'  # username
-PS1+='\[${gray}\]]─[\[${reset}\]'
-PS1+='\W'  # working directory
-PS1+='\[${gray}\]]'
-PS1+='$(prompt_git_box)'
-PS1+='$(prompt_exit_status)'
-PS1+='$(prompt_jobs_box)'
-PS1+='\n'
-PS1+='\[${gray}\]└─>\[${reset}\] '
+# \001/\002 rather than \[ \]: bash processes \[ \] before command substitution,
+# so markers arriving from $(...) are never honoured and readline miscounts the
+# prompt width.
+_bash_git() {
+    local git
+    git="$(prompt_git)" || return
+    [ -n "$git" ] || return
+    printf '\001\e[90m\002─[\001\e[0m\002git\001\e[90m\002:\001\e[0m\002%s\001\e[90m\002]\001\e[0m\002' "$git"
+}
 
-PS2='\[${gray}\]───>\[${reset}\] '
+# \A is the clock, no fork. Exit status and job count are zsh-only: bash needs
+# PROMPT_COMMAND to capture $?, and this file is a compatibility shim rather
+# than the interactive shell.
+PS1='\n'
+PS1+='\[\e[90m\]┌─[\[\e[0m\]\A\[\e[90m\]]─[\[\e[0m\]\u\[\e[90m\]]─[\[\e[0m\]\W\[\e[90m\]]\[\e[0m\]'
+PS1+='$(_bash_git)'
+PS1+='\n\[\e[90m\]└─>\[\e[0m\] '
+
+PS2='\[\e[90m\]───>\[\e[0m\] '
 
 # Deliberately not exported — see the note in .zprompt.
