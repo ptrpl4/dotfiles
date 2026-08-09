@@ -26,12 +26,17 @@ if [[ -d /opt/homebrew/share/zsh/site-functions ]]; then
 fi
 
 autoload -Uz compinit
-# Only rebuild the completion cache once a day
-if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qNmh-24) ]]; then
-  compinit -C  # Skip security check, use cached
+# Only rebuild the completion cache once a day. Array assignment, not [[ -n … ]]:
+# zsh does no filename generation inside [[ ]], so the glob would be a literal
+# and the test always true — compinit -C forever, and new fpath entries never
+# picked up. Bare qualifiers here also avoid needing EXTENDED_GLOB.
+_zcompdump=(${ZDOTDIR:-$HOME}/.zcompdump(Nmh-24))
+if (( $#_zcompdump )); then
+  compinit -C  # fresh enough, skip the security check
 else
-  compinit     # Rebuild cache
+  compinit     # rebuild
 fi
+unset _zcompdump
 
 for file in ~/.{zprompt,aliases,private}; do
   [[ -r "$file" ]] && source "$file"

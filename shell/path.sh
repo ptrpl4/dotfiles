@@ -1,6 +1,7 @@
-#!/bin/sh
 # Single source of truth for PATH. Sourcing it runs it; the helpers are
 # remove-then-add, so re-sourcing re-asserts order instead of duplicating.
+# No shebang: this is sourced, never executed. It needs bash or zsh — the
+# ${var//x/y} below is not POSIX and silently no-ops under dash.
 #
 # Sourced from: zshenv (every zsh) · zprofile (again, after path_helper demotes
 # it) · bashrc (compatibility path). Shared, so no zsh-only syntax. Parameter
@@ -16,12 +17,19 @@ DOTFILES="${DOTFILES:-$HOME/dotfiles}"
 # Remove-then-add, never skip-if-present: in a login shell path_helper has
 # already placed /opt/homebrew/bin mid-PATH, and skipping would strand it
 # behind /usr/local/bin. Adds are -d guarded, so missing dirs cost nothing.
+# Looped, because the match consumes the shared separator: a single pass turns
+# ":a:a:" into ":a:" rather than "::", leaving one stale copy mid-PATH. zsh
+# hides this behind `typeset -U`; bash has no equivalent.
 _dfp_remove() {
     _dfp_p=":${PATH}:"
-    _dfp_p="${_dfp_p//":$1:"/:}"
+    while :; do
+        _dfp_q="${_dfp_p//":$1:"/:}"
+        [ "$_dfp_q" = "$_dfp_p" ] && break
+        _dfp_p="$_dfp_q"
+    done
     _dfp_p="${_dfp_p#:}"
     PATH="${_dfp_p%:}"
-    unset _dfp_p
+    unset _dfp_p _dfp_q
 }
 
 _dfp_prepend() {
@@ -40,9 +48,14 @@ _dfp_append() {
 # head, so the last one ends up first.
 _dfp_append  "$HOME/go/bin"
 
-# /etc/paths.d is read by path_helper in login shells only; re-add so Makefiles
-# and agent tooling see these too.
+# /etc/paths and /etc/paths.d are read by path_helper in login shells only, so
+# re-add the entries that carry real tools — go, podman, and /usr/local/bin,
+# where n installs node. The rest of /etc/paths.d is Apple's (cryptex, rvictl)
+# plus /pkg/env/global/bin, which does not exist here; the -d guard would skip
+# it anyway. /usr/local/bin is prepended below podman so the order matches what
+# path_helper produces in a login shell.
 _dfp_append  "/usr/local/go/bin"
+_dfp_prepend "/usr/local/bin"
 _dfp_prepend "/opt/podman/bin"
 
 _dfp_prepend "/opt/homebrew/sbin"

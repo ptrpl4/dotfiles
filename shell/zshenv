@@ -1,4 +1,7 @@
 # Every zsh — interactive or not, login or not. Keep minimal and silent;
-# output here breaks scp and rsync.
+# output here breaks scp and rsync. Hence the -r guard: a moved or not-yet-
+# cloned repo must not make every zsh write to stderr.
 typeset -U path PATH
-source "${DOTFILES:-$HOME/dotfiles}/shell/path.sh"
+_dfp_init="${DOTFILES:-$HOME/dotfiles}/shell/path.sh"
+[ -r "$_dfp_init" ] && . "$_dfp_init"
+unset _dfp_init

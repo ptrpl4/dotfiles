@@ -21,6 +21,7 @@ _zprompt() {
     PS1+=$'\n'"%F{8}└─>%f "
 }
 add-zsh-hook precmd _zprompt
+_zprompt   # populate PS1 now; precmd only fires at the first prompt
 
 PS2="%F{8}───>%f "
 

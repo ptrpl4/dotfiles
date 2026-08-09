@@ -1,10 +1,7 @@
 ---
 paths:
   - "**/*.sh"
-  - "shell/*"
-  - "**/.zshrc"
-  - "**/.zprofile"
-  - "**/.zshenv"
+  - "**/shell/*"
 ---
 
 # Shell File Rules
@@ -56,9 +53,14 @@ zsh, so use parameter expansion over forking `sed`.
   re-add them in `path.sh` so every shell agrees
 - Helpers must **remove-then-add**, never skip-if-present: `path_helper` has
   already put `/opt/homebrew/bin` mid-PATH, and skipping strands it there
-- Guard any `$VAR/bin` entry with `-n "$VAR"` — unset, `[ -d "$VAR/bin" ]` tests
-  `/bin` and puts it at the head
-- Keg-only Homebrew formulae need their `libexec/bin` for the unversioned name
+- Removal must loop: `${p//":$1:"/:}` consumes the shared separator, so one pass
+  turns `:a:a:` into `:a:` and strands a duplicate. `typeset -U` masks this in
+  zsh only
+- For future entries: guard any `$VAR/bin` with `-n "$VAR"` — unset,
+  `[ -d "$VAR/bin" ]` tests `/bin` and puts it at the head
+- Keg-only Homebrew formulae need their `libexec/bin` for the unversioned name.
+  Deliberately not done for python: `python3`/`pip3` come from
+  `/opt/homebrew/bin` and bare `python`/`pip` are not wanted
 
 ### Installers that edit rc files
 

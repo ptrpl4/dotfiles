@@ -39,6 +39,12 @@ link_file() {
     fi
 }
 
+# Migrate the pre-move secrets file before anything links or sources it.
+if [[ -f "${dotfiles_dir}/.private" && ! -f "${dotfiles_dir}/shell/private" ]]; then
+    mv "${dotfiles_dir}/.private" "${dotfiles_dir}/shell/private"
+    echo "Moved .private -> shell/private"
+fi
+
 # Shell config: lives in shell/ without a leading dot, linked into $HOME with one.
 # path.sh is sourced by the others, not linked.
 shell_files=(zshenv zprofile zshrc zprompt bashrc bash_profile bash_prompt aliases prompt_common private)
