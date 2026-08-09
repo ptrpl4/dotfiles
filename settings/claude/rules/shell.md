@@ -30,7 +30,7 @@ Config lives in `~/dotfiles/shell/` without a leading dot; `install.sh` links
 
 | Goes in | What |
 |---|---|
-| `path.sh` | **every** PATH entry, plus env PATH depends on (`N_PREFIX`) |
+| `path.sh` | **every** PATH entry, plus any env PATH depends on |
 | `zshenv` | env every zsh needs. Small and silent; `zsh -f` skips it |
 | `zprofile` | only what must run **after** `path_helper` |
 | `zshrc` | interactive: history, `setopt`, `compinit`/`fpath`, prompt, aliases |
@@ -56,8 +56,8 @@ zsh, so use parameter expansion over forking `sed`.
   re-add them in `path.sh` so every shell agrees
 - Helpers must **remove-then-add**, never skip-if-present: `path_helper` has
   already put `/opt/homebrew/bin` mid-PATH, and skipping strands it there
-- Guard `$VAR/bin` with `-n` — unset `N_PREFIX` turns `[ -d "$N_PREFIX/bin" ]`
-  into `[ -d "/bin" ]`, putting `/bin` at the head
+- Guard any `$VAR/bin` entry with `-n "$VAR"` — unset, `[ -d "$VAR/bin" ]` tests
+  `/bin` and puts it at the head
 - Keg-only Homebrew formulae need their `libexec/bin` for the unversioned name
 
 ### Installers that edit rc files

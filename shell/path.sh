@@ -36,12 +36,9 @@ _dfp_append() {
     PATH="${PATH:+$PATH:}$1"
 }
 
-export N_PREFIX="$HOME/.n"   # n installs node/npm here, not under Homebrew
-
 # Appends first, then prepends in reverse priority — each prepend takes the
 # head, so the last one ends up first.
 _dfp_append  "$HOME/go/bin"
-_dfp_append  "/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 
 # /etc/paths.d is read by path_helper in login shells only; re-add so Makefiles
 # and agent tooling see these too.
@@ -50,7 +47,6 @@ _dfp_prepend "/opt/podman/bin"
 
 _dfp_prepend "/opt/homebrew/sbin"
 _dfp_prepend "/opt/homebrew/bin"   # python3/pip3 live here; bare python is not wanted
-[ -n "$N_PREFIX" ] && _dfp_prepend "$N_PREFIX/bin"  # -n: unset would test /bin
 _dfp_prepend "$HOME/.local/bin"
 _dfp_prepend "$DOTFILES/bin"
 

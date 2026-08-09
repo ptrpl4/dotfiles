@@ -39,7 +39,7 @@ shell reads it, not by topic.
 
 | File | Read by | Holds |
 |---|---|---|
-| `path.sh` | sourced by the others | **every** PATH entry, and `N_PREFIX` |
+| `path.sh` | sourced by the others | **every** PATH entry |
 | `zshenv` | every zsh, including `zsh -c` | sources `path.sh`; minimal and silent |
 | `zprofile` | login zsh, **after** `path_helper` | re-sources `path.sh`; `EDITOR` |
 | `zshrc` | interactive zsh | history, `setopt`, completions, prompt, aliases |
@@ -64,7 +64,7 @@ the line into `path.sh` if it should also reach non-interactive shells.
 - Verify a shell change in a clean shell: `env -i HOME="$HOME" TERM=xterm zsh -lc 'print -l $path'`. Use `-c` / `-ic` for the non-login and interactive paths
 - Config change stopped tracking? `readlink ~/.zshrc` — an installer that writes-temp-then-renames replaces the symlink with a regular file
 - Aliases are interactive-only, so anything defined in `shell/aliases` or `shell/private` is absent from scripts and agent shells
-- `n` comes from the Brewfile but installs no Node runtime — run `n lts` once on a new machine
+- `n` comes from the Brewfile but installs no Node runtime — `sudo n lts` once on a new machine. No `N_PREFIX` is set, so runtimes land in `/usr/local/bin`, already on PATH via `/etc/paths`
 
 ## Tools
 
