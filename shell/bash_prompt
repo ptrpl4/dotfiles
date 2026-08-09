@@ -1,23 +1,24 @@
-source "${HOME}/.prompt_common"
+[[ -r "${HOME}/.prompt_common" ]] && source "${HOME}/.prompt_common"
 
 # \001/\002 rather than \[ \]: bash processes \[ \] before command substitution,
 # so markers arriving from $(...) are never honoured and readline miscounts the
-# prompt width.
+# prompt width. \e[39m, not \e[0m, to match zsh's %f — foreground only.
 _bash_git() {
     local git
+    declare -f prompt_git >/dev/null || return
     git="$(prompt_git)" || return
     [ -n "$git" ] || return
-    printf '\001\e[90m\002─[\001\e[0m\002git\001\e[90m\002:\001\e[0m\002%s\001\e[90m\002]\001\e[0m\002' "$git"
+    printf '\001\e[90m\002─[\001\e[39m\002git\001\e[90m\002:\001\e[39m\002%s\001\e[90m\002]\001\e[39m\002' "$git"
 }
 
 # \A is the clock, no fork. Exit status and job count are zsh-only: bash needs
 # PROMPT_COMMAND to capture $?, and this file is a compatibility shim rather
 # than the interactive shell.
 PS1='\n'
-PS1+='\[\e[90m\]┌─[\[\e[0m\]\A\[\e[90m\]]─[\[\e[0m\]\u\[\e[90m\]]─[\[\e[0m\]\W\[\e[90m\]]\[\e[0m\]'
+PS1+='\[\e[90m\]┌─[\[\e[39m\]\A\[\e[90m\]]─[\[\e[39m\]\u\[\e[90m\]]─[\[\e[39m\]\W\[\e[90m\]]\[\e[39m\]'
 PS1+='$(_bash_git)'
-PS1+='\n\[\e[90m\]└─>\[\e[0m\] '
+PS1+='\n\[\e[90m\]└─>\[\e[39m\] '
 
-PS2='\[\e[90m\]───>\[\e[0m\] '
+PS2='\[\e[90m\]───>\[\e[39m\] '
 
 # Deliberately not exported — see the note in .zprompt.

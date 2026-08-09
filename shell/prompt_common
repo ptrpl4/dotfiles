@@ -1,37 +1,47 @@
 # Shared by zprompt and bash_prompt. Returns plain text — no colour, no
 # brackets — so each shell can wrap it in its own non-printing markers.
 #
-# One `git status` replaces the four rev-parse/rev-list forks this used to
-# make: ~13 ms per prompt against ~46 ms. --no-optional-locks keeps the prompt
-# from taking the index lock behind a concurrent git; -uno skips the untracked
-# scan, which nothing here reports on.
+# for-each-ref reads refs only, so the cost is flat in worktree size. `git
+# status` was tried and is much worse where it matters: on a 2469-file repo it
+# runs 16 ms with a warm index but 280-300 ms once stat data is stale, which is
+# the state after every checkout, rebase or build — exactly when the prompt is
+# looked at. for-each-ref stays at 12 ms throughout. It does grow with the
+# branch count (200 branches ≈ 25 ms) since it resolves upstream tracking per
+# ref, which is the better trade.
 prompt_git() {
-    local out line head oid ab ahead behind sync=''
+    local out line rest head up track ahead behind sync=''
 
-    out=$(git --no-optional-locks status -uno --porcelain=v2 --branch 2>/dev/null) || return
+    out=$(git --no-optional-locks for-each-ref \
+              --format='%(HEAD)|%(refname:short)|%(upstream)|%(upstream:track,nobracket)' \
+              refs/heads 2>/dev/null) || return
 
-    # Header lines come first and all start with '#'; stop at the first entry.
-    while read -r line; do
-        case "$line" in
-            '# branch.head '*) head="${line#\# branch.head }" ;;
-            '# branch.oid '*)  oid="${line#\# branch.oid }"   ;;
-            '# branch.ab '*)   ab="${line#\# branch.ab }"     ;;
-            '#'*) ;;
-            *) break ;;
-        esac
+    while IFS= read -r line; do
+        case "$line" in '*|'*) rest="${line#\*|}" ;; *) continue ;; esac
+        # Parse right to left: a branch name may contain '|', the other two
+        # fields cannot.
+        track="${rest##*|}"; rest="${rest%|*}"
+        up="${rest##*|}";    head="${rest%|*}"
+        break
     done <<EOF
 $out
 EOF
 
-    [ "$head" = '(detached)' ] && head="${oid:0:7}"
+    # Detached HEAD carries the marker on no ref at all. rev-parse honours
+    # core.abbrev, so the oid matches what every other git command here prints.
+    [ -n "$head" ] || head=$(git --no-optional-locks rev-parse --short HEAD 2>/dev/null) || return
 
-    # branch.ab is absent when there is no upstream, so no separate probe.
-    if [ -n "$ab" ]; then
-        ahead="${ab%% *}"    # +N
-        behind="${ab##* }"   # -N
-        [ "${behind#-}" -gt 0 ] && sync="${sync}↓${behind#-}"
-        [ "${ahead#+}" -gt 0 ] && sync="${sync}↑${ahead#+}"
-        sync=":${sync:-✓}"
+    # An empty track means in sync; without an upstream it means nothing, hence
+    # the separate %(upstream) field.
+    if [ -n "$up" ]; then
+        if [ "$track" = gone ]; then
+            sync=':gone'
+        else
+            case "$track" in *'behind '*) behind="${track##*behind }"; behind="${behind%%,*}" ;; esac
+            case "$track" in *'ahead '*)  ahead="${track##*ahead }";   ahead="${ahead%%,*}"   ;; esac
+            [ -n "$behind" ] && sync="${sync}↓${behind}"
+            [ -n "$ahead" ]  && sync="${sync}↑${ahead}"
+            sync=":${sync:-✓}"
+        fi
     fi
 
     printf '%s%s' "$head" "$sync"
