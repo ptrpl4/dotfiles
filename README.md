@@ -8,7 +8,7 @@ Based on [mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles) and
 ```bash
 git clone git@github.com:ptrpl4/dotfiles.git ~/dotfiles && cd ~/dotfiles
 touch .private   # machine-specific config, see below
-./install.sh
+make install
 ```
 
 ### `.private` variables
@@ -74,15 +74,8 @@ cs delete <id>        # delete a session by ID (partial match ok)
 
 Deleting a session also removes its `~/.claude/file-history/<id>/` directory.
 
-## TODO
-
-- [ ] Add `make help` target
-- [ ] Add restore script (`brew bundle install`, etc.)
-- [ ] Add syncing settings backup
-
 ## Prompt
 
-**Features:**
+Features:
 - Git branch with sync status (✓ synced, ↑ ahead, ↓ behind)
-- Command execution time (if > 1s)
 - Auto-adaptive colors (switches with terminal theme)
