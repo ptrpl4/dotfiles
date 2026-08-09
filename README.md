@@ -47,9 +47,11 @@ shell reads it, not by topic.
 PATH is built in one place so interactive shells, `zsh -c`, Makefiles and agent
 tooling all agree. `path_helper` (run by `/etc/zprofile`) rebuilds PATH from
 `/etc/paths` + `/etc/paths.d/*` and appends the old value, which cuts both ways:
-`zshenv` entries get demoted to the tail in login shells, and `/etc/paths.d`
-tools are absent from non-login ones. Hence `zprofile` re-sources, and those
-entries are re-added in `path.sh`.
+`zshenv` entries get demoted to the tail in login shells, and everything from
+`/etc/paths{,.d}` — including `/usr/local/bin` — is missing entirely from
+non-login ones. Hence `zprofile` re-sources, and the entries that carry real
+tools (`/usr/local/bin`, go, podman) are re-added in `path.sh`. Apple's own
+`/etc/paths.d` entries are deliberately left login-only.
 
 The `bash*` files are a compatibility shim for agent tooling and bash-login
 hosts, not part of the setup.
@@ -64,7 +66,8 @@ the line into `path.sh` if it should also reach non-interactive shells.
 - Verify a shell change in a clean shell: `env -i HOME="$HOME" TERM=xterm zsh -lc 'print -l $path'`. Use `-c` / `-ic` for the non-login and interactive paths
 - Config change stopped tracking? `readlink ~/.zshrc` — an installer that writes-temp-then-renames replaces the symlink with a regular file
 - Aliases are interactive-only, so anything defined in `shell/aliases` or `shell/private` is absent from scripts and agent shells
-- `n` comes from the Brewfile but installs no Node runtime — `sudo n lts` once on a new machine. No `N_PREFIX` is set, so runtimes land in `/usr/local/bin`, already on PATH via `/etc/paths`
+- `n` comes from the Brewfile but installs no Node runtime — `sudo n lts` once on a new machine. No `N_PREFIX` is set, so runtimes land in `/usr/local/bin`, which `path.sh` re-adds for non-login shells
+- Completions not picking up a newly installed tool? The cache rebuilds once a day; `rm ~/.zcompdump` to force it
 
 ## Tools
 
