@@ -29,7 +29,7 @@
 - Terminal host is Zed's integrated terminal or Ghostty; `EDITOR` is `zed --wait`, so editor-opening commands block until the tab closes — prefer `git commit -m`, `GIT_EDITOR=true`
 - macOS TCC: touching `~/Desktop`, `~/Documents`, `~/Downloads`, `~/Library`, `~/Pictures` pops a GUI dialog attributed to the host app and invisible from the terminal — exclude those paths from `find`/`grep` sweeps
 - All PATH construction is in `~/dotfiles/shell/path.sh`, sourced by every shell — add entries there, never to a per-shell rc file
-- PATH is frozen per session: the Bash tool replays `~/.claude/shell-snapshots/snapshot-{bash,zsh}-*.sh`, which ends in a literal `export PATH=…` captured at session start. A newly added PATH entry needs a restarted session; switching versions in place (`sudo n <ver>` — no `N_PREFIX`, so n writes to `/usr/local`) works fine
+- PATH is frozen per session: the Bash tool replays `~/.claude/shell-snapshots/snapshot-{bash,zsh}-*.sh`, which ends in a literal `export PATH=…` captured at session start. A newly added PATH entry needs a restarted session; switching versions in place works fine — `n <ver>`, **without sudo**: `N_PREFIX` is `$HOME/.local` (set in `shell/path.sh`) and sudo's env_reset would drop it, silently installing to `/usr/local` instead
 - **No aliases** — the snapshot opens with `unalias -a`, so nothing from `shell/aliases` or `shell/private` exists here. No Docker binary is installed either; call `podman` directly and don't assume Docker compose/buildx/socket semantics
 - `~/dotfiles/bin` is first on PATH — the right place for shims and small CLIs, and unlike an alias it survives into this shell
 - If an installed tool seems missing, check `~/dotfiles/shell/path.sh`; don't assume a given tool is present on this machine

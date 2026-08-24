@@ -49,10 +49,10 @@ _dfp_append() {
 _dfp_append  "$HOME/go/bin"
 
 # /etc/paths and /etc/paths.d are read by path_helper in login shells only, so
-# re-add the entries that carry real tools — go, podman, and /usr/local/bin,
-# where n installs node. The rest of /etc/paths.d is Apple's (cryptex, rvictl)
-# plus /pkg/env/global/bin, which does not exist here; the -d guard would skip
-# it anyway. /usr/local/bin is prepended below podman so the order matches what
+# re-add the entries that carry real tools — go, podman and /usr/local/bin. (n
+# no longer installs there; see N_PREFIX below.) The rest of /etc/paths.d is
+# Apple's (cryptex, rvictl) plus /pkg/env/global/bin, which does not exist here;
+# the -d guard would skip it anyway. /usr/local/bin is prepended below podman so the order matches what
 # path_helper produces in a login shell.
 _dfp_append  "/usr/local/go/bin"
 _dfp_prepend "/usr/local/bin"
@@ -60,6 +60,15 @@ _dfp_prepend "/opt/podman/bin"
 
 _dfp_prepend "/opt/homebrew/sbin"
 _dfp_prepend "/opt/homebrew/bin"   # python3/pip3 live here; bare python is not wanted
+# n installs into $N_PREFIX/{bin,lib,include,share}. Unset, it writes to
+# /usr/local and needs sudo — and sudo's env_reset drops this var, so `sudo n`
+# lands in /usr/local no matter what is set here. Run n without sudo. This
+# belongs in the PATH file rather than a shell rc: it decides where a binary
+# lands, so it must not drift away from the prepend on the next line, and every
+# shell needs it — n run from a script or a non-interactive shell must not pick
+# a different prefix than an interactive one.
+export N_PREFIX="$HOME/.local"
+
 _dfp_prepend "$HOME/.local/bin"
 _dfp_prepend "$DOTFILES/bin"
 
