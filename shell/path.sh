@@ -72,4 +72,11 @@ export N_PREFIX="$HOME/.local"
 _dfp_prepend "$HOME/.local/bin"
 _dfp_prepend "$DOTFILES/bin"
 
+# glab rewrites its config in place and stores the host identity (hostname,
+# username) in it, so the live config is a gitignored local/ dir that install.sh
+# generates from the tracked seed plus shell/private. Set here rather than
+# symlinked: every shell sources this file, so a fresh clone works before
+# `make install`, and ~/Library stays untouched (TCC-guarded).
+export GLAB_CONFIG_DIR="$DOTFILES/settings/glab/local"
+
 export PATH

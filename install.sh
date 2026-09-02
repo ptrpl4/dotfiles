@@ -75,6 +75,14 @@ else
     echo "Zed is not installed. Skipping Zed settings."
 fi
 
+# glab: local/ is gitignored and owned by glab (it holds the hostname, username
+# and glab's in-place rewrites). Seed the prefs once; `glab auth login` writes
+# the host block itself, so there is nothing to generate here.
+mkdir -p "${dotfiles_dir}/settings/glab/local"
+link_file "${dotfiles_dir}/settings/glab/aliases.yml" "${dotfiles_dir}/settings/glab/local/aliases.yml" glab
+[[ -f "${dotfiles_dir}/settings/glab/local/config.yml" ]] || \
+    cp "${dotfiles_dir}/settings/glab/config.yml" "${dotfiles_dir}/settings/glab/local/config.yml"
+
 # macOS system settings
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Dock

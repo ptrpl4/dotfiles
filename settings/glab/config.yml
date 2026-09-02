@@ -1,0 +1,27 @@
+# glab global preferences — machine-neutral, safe to track.
+#
+# This file is a SEED, not the live config. install.sh copies it once to
+# settings/glab/local/config.yml (gitignored), where GLAB_CONFIG_DIR points
+# glab. From then on glab owns that copy: `glab auth login` adds the host block
+# and the username, and glab rewrites the file in place — none of which is
+# tracked. Editing this seed only affects the next machine, so change a setting
+# in both places (or delete local/config.yml and re-run make install).
+#
+# Only machine-neutral preferences belong here. The token lives in the OS
+# keyring, and the hostname and username stay in local/.
+
+# Git operations protocol. Supported values: ssh, https.
+git_protocol: ssh
+# Markdown renderer style: dark, light, notty.
+glamour_style: dark
+# Check for glab updates and notify when a new one exists.
+check_update: true
+# Display hyperlink escape characters when listing issues or merge requests.
+display_hyperlinks: false
+# Set to true (1) to disable prompts, false (0) to enable them.
+no_prompt: false
+# Set to false (0) to stop sending usage data to the GitLab instance.
+telemetry: false
+# Per-instance config, filled in by `glab auth login` on the live copy in
+# local/. Left empty here so no hostname or username is tracked.
+hosts:

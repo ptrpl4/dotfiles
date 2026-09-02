@@ -22,6 +22,11 @@ shell/private
 # Ignore backups
 /backups
 
+# glab — settings/glab/{config.yml,aliases.yml} are machine-neutral seeds.
+# local/ is the live config glab reads and rewrites: hostname, username and
+# update timestamps all land there, so none of it is tracked.
+settings/glab/local/
+
 # obsidian
 settings/obsidian/default/workspace.json
 settings/obsidian/default/plugins/*/main.js
@@ -37,5 +42,6 @@ settings/obsidian/default/plugins/*/*.sh
 
 .claude
 
-# Claude skills (machine-local, not shared via dotfiles)
-settings/claude/skills/
+# Claude skills — work-* hold internal hostnames, project keys and test accounts,
+# so they stay local. Everything else is tracked so staleness shows up in the diff.
+settings/claude/skills/work-*/
