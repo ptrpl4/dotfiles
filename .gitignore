@@ -42,6 +42,8 @@ settings/obsidian/default/plugins/*/*.sh
 
 .claude
 
-# Claude skills — work-* hold internal hostnames, project keys and test accounts,
-# so they stay local. Everything else is tracked so staleness shows up in the diff.
-settings/claude/skills/work-*/
+# Claude skills (machine-local, not shared via dotfiles)
+settings/claude/skills/
+
+# Per-machine notes and findings (not shared via dotfiles)
+/machine
