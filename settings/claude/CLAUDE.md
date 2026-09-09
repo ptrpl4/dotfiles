@@ -3,9 +3,13 @@
 ## Meta
 - These rules override default behavior. If one conflicts with the task, surface it immediately — do not attempt the task first
 
+## Scope & Cost
+- Do what was asked, then stop. If more looks worthwhile — extra verification, tooling, refactors, a browser check — finish the actual task first and suggest it in one line; never just run it
+- Spend compute, wall-clock time and tokens deliberately: one broad tool call instead of several narrow ones, no re-deriving what is already in context, no verifying what nobody questioned
+
 ## Commits & Git
 - Never add `Co-Authored-By` lines — this overrides the harness default, which adds them
-- Never commit or push without approval; keep subject lines short
+- Never commit or push without approval. Keep commit messages short: a subject line, and a body only when something genuinely cannot be inferred from the diff
 
 ## Communication & Output
 - Write impersonally — never "you"/"your" for code, configs, or the project ("the config", not "your config")
@@ -19,12 +23,11 @@
 - Show the plan before touching more than one file or rewriting more than ~20 lines — wait for confirmation
 - If the plan turns out wrong mid-execution, stop and re-confirm rather than self-correct silently
 - Check for existing linter/formatter config before assuming style
+- Comments: short, or none. Past ~3 lines a comment is usually a symptom — fix the naming or the code instead. Record only what the code cannot say (a constraint, a rejected alternative, a why); never narrate what it does
 
 ## ENV
 - Package manager: follow the `packageManager` field or lock files
 - Bash tool runs the account's login shell — bash on some machines, zsh on others. Write portable sh: no `setopt`, no `print`, no zsh globbing or expansion flags (`(#q)`, `${(f)…}`), no bash-4 features (`${var^^}`, associative arrays, `mapfile`). Under zsh the `log` builtin shadows `/usr/bin/log`, since `/etc/zshrc`'s `disable log` is interactive-only
-- BSD userland: `sed -i ''` (empty arg), `sed -E` not `-r`, `stat -f` not `-c`, no `date -d`, no `find -printf`; GNU only as `gdate`/`gstat`. `launchctl` not `systemctl`, `lsof -i -P` not `ss`, `open` not `xdg-open`, `shasum` not `sha256sum`, no `/proc`
-- Bash-tool `grep`/`find` are ugrep-backed shims so `-P` works; `/usr/bin/grep` is BSD and has no `-P` — don't rely on it in scripts
 - Homebrew prefix is `/opt/homebrew`
 - Terminal host is Zed's integrated terminal or Ghostty; `EDITOR` is `zed --wait`, so editor-opening commands block until the tab closes — prefer `git commit -m`, `GIT_EDITOR=true`
 - macOS TCC: touching `~/Desktop`, `~/Documents`, `~/Downloads`, `~/Library`, `~/Pictures` pops a GUI dialog attributed to the host app and invisible from the terminal — exclude those paths from `find`/`grep` sweeps
@@ -37,7 +40,6 @@
 ## Claude config
 - `~/.claude/{CLAUDE.md,settings.json,keybindings.json,statusline-command.sh}` and `hooks/`, `rules/`, `skills/` are symlinks into `~/dotfiles/settings/claude/`. Editing tools refuse to write through symlinks — edit the real target; changes surface as `~/dotfiles` git changes
 - `rules/*.md` load by `paths:` frontmatter globs — unscoped rules belong in this file instead
-- Suggest a project `.claude/settings.json` allow-list on first session, or once the same command is approved twice; remind to gitignore `settings.local.json` if it holds machine paths
 
 ## Skills
 - Available via `/skill-name`; check `work-*` skills first for work tasks
