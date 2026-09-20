@@ -8,7 +8,6 @@
 - Spend compute, wall-clock time and tokens deliberately: one broad tool call instead of several narrow ones, no re-deriving what is already in context, no verifying what nobody questioned
 
 ## Commits & Git
-- Never add `Co-Authored-By` lines — this overrides the harness default, which adds them
 - Never commit or push without approval. Keep commit messages short: a subject line, and a body only when something genuinely cannot be inferred from the diff
 
 ## Communication & Output
@@ -36,10 +35,6 @@
 - **No aliases** — the snapshot opens with `unalias -a`, so nothing from `shell/aliases` or `shell/private` exists here. No Docker binary is installed either; call `podman` directly and don't assume Docker compose/buildx/socket semantics
 - `~/dotfiles/bin` is first on PATH — the right place for shims and small CLIs, and unlike an alias it survives into this shell
 - If an installed tool seems missing, check `~/dotfiles/shell/path.sh`; don't assume a given tool is present on this machine
-
-## Claude config
-- `~/.claude/{CLAUDE.md,settings.json,keybindings.json,statusline-command.sh}` and `hooks/`, `rules/`, `skills/` are symlinks into `~/dotfiles/settings/claude/`. Editing tools refuse to write through symlinks — edit the real target; changes surface as `~/dotfiles` git changes
-- `rules/*.md` load by `paths:` frontmatter globs — unscoped rules belong in this file instead
 
 ## Skills
 - Available via `/skill-name`; check `work-*` skills first for work tasks

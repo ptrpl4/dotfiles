@@ -1,8 +1,22 @@
 {
   "permissions": {
-    "defaultMode": "acceptEdits"
+    "defaultMode": "auto"
   },
   "model": "opus",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Glass.aiff",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "enableArtifact": false,
   "statusLine": {
     "type": "command",
     "command": "bash $HOME/.claude/statusline-command.sh"
@@ -11,17 +25,25 @@
   "spinnerTipsEnabled": false,
   "promptSuggestionEnabled": false,
   "awaySummaryEnabled": false,
-  "autoUpdatesChannel": "latest",
+  "dialogExpiry": "never",
+  "autoUpdatesChannel": "stable",
   "tui": "fullscreen",
   "prefersReducedMotion": true,
   "skipWorkflowUsageWarning": true,
-  "theme": "dark-ansi",
+  "theme": "auto",
   "editorMode": "normal",
-  "preferredNotifChannel": "terminal_bell",
+  "preferredNotifChannel": "auto",
   "autoCompactEnabled": false,
+  "switchModelsOnFlag": false,
+  "autoContinueAtUsageLimit": false,
   "fileCheckpointingEnabled": false,
   "showTurnDuration": false,
+  "terminalProgressBarEnabled": false,
   "remoteControlAtStartup": false,
-  "inputNeededNotifEnabled": true,
-  "agentPushNotifEnabled": true
+  "inputNeededNotifEnabled": false,
+  "agentPushNotifEnabled": false,
+  "cleanupPeriodDays": 90,
+  "attribution": {
+    "commitTrailers": false
+  }
 }

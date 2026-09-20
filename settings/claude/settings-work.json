@@ -28,5 +28,9 @@
   "showTurnDuration": true,
   "remoteControlAtStartup": false,
   "inputNeededNotifEnabled": false,
-  "agentPushNotifEnabled": false
+  "agentPushNotifEnabled": false,
+  "cleanupPeriodDays": 90,
+  "attribution": {
+    "commitTrailers": false
+  }
 }
