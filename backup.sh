@@ -3,18 +3,9 @@
 # backup.sh - Backup system configurations and installed applications
 # This script creates backups of installed applications and configurations on macOS and Linux systems.
 
-# Constants
-readonly BACKUP_DATE=$(date +%Y-%m-%d)
-readonly BACKUP_DIR="${HOME}/dotfiles/backups/${LOGNAME}/${BACKUP_DATE}"
-readonly APPS_FILE="apps.txt"
-readonly BIN_FILE="bin.txt"
-readonly OPT_FILE="opt.txt"
-readonly BREW_FILE="brew.txt"
-readonly APT_FILE="apt.txt"
-readonly ADGUARD_DIR="adguard"
-readonly CLAUDE_DIR="${HOME}/.claude"
-readonly CLAUDE_BACKUP_DIR="claude"
-readonly OBSIDIAN_BACKUP_DIR="obsidian"
+DOTFILES_DIR="${HOME}/dotfiles"
+BACKUP_DIR="${DOTFILES_DIR}/backups/${LOGNAME}/$(date +%Y-%m-%d)"
+CLAUDE_DIR="${HOME}/.claude"
 
 # Create backup directory
 mkdir -p "${BACKUP_DIR}"
@@ -30,25 +21,11 @@ backup_directory_listing() {
   fi
 }
 
-# Function to backup file with optional sudo
 backup_file() {
-  local src="$1"
-  local dest_dir="$2"
-  local needs_sudo="${3:-false}"
-
-  if [[ "$needs_sudo" == "true" ]]; then
-    if sudo test -f "$src"; then
-      sudo cp "$src" "$dest_dir/"
-      sudo chown "$(whoami):$(id -gn)" "$dest_dir/$(basename "$src")"
-      echo "Backed up $src"
-    else
-      echo "Warning: $src not found, skipping"
-    fi
-  else
-    if [[ -f "$src" ]]; then
-      cp "$src" "$dest_dir/"
-      echo "Backed up $src"
-    fi
+  local src="$1" dest_dir="$2"
+  if [[ -f "$src" ]]; then
+    cp "$src" "$dest_dir/"
+    echo "Backed up $src"
   fi
 }
 
@@ -59,7 +36,7 @@ backup_claude() {
     return
   fi
 
-  local dest="${BACKUP_DIR}/${CLAUDE_BACKUP_DIR}"
+  local dest="${BACKUP_DIR}/claude"
   mkdir -p "${dest}"
 
   # Global config files
@@ -121,7 +98,7 @@ backup_obsidian() {
 
     [[ -d "$obsidian_dir" ]] || continue
 
-    local dest="${BACKUP_DIR}/${OBSIDIAN_BACKUP_DIR}/${vault_name}"
+    local dest="${BACKUP_DIR}/obsidian/${vault_name}"
     mkdir -p "${dest}"
     cp -R "$obsidian_dir" "${dest}/"
     echo "Backed up Obsidian vault: ${vault_name}"
@@ -131,13 +108,14 @@ backup_obsidian() {
 # copy list of installed apps
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Running on macOS
-  backup_directory_listing "/Applications" "${BACKUP_DIR}/${APPS_FILE}"
-  backup_directory_listing "/usr/local/bin" "${BACKUP_DIR}/${BIN_FILE}"
-  backup_directory_listing "/opt" "${BACKUP_DIR}/${OPT_FILE}"
+  backup_directory_listing "/Applications" "${BACKUP_DIR}/apps.txt"
+  backup_directory_listing "/usr/local/bin" "${BACKUP_DIR}/bin.txt"
+  backup_directory_listing "/opt" "${BACKUP_DIR}/opt.txt"
 
   if command -v brew &> /dev/null; then
-    brew list --versions > "${BACKUP_DIR}/${BREW_FILE}"
-    brew bundle dump --file="${BACKUP_DIR}/Brewfile" --force
+    brew list --versions > "${BACKUP_DIR}/brew.txt"
+    # Into the tracked Brewfile; review with git diff
+    brew bundle dump --file="${DOTFILES_DIR}/Brewfile" --force
   fi
 
   # macOS app settings
@@ -146,22 +124,22 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   echo "Backup successful"
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
   # Running on Linux
-  backup_directory_listing "/usr/bin" "${BACKUP_DIR}/${BIN_FILE}"
-  backup_directory_listing "/opt" "${BACKUP_DIR}/${OPT_FILE}"
+  backup_directory_listing "/usr/bin" "${BACKUP_DIR}/bin.txt"
+  backup_directory_listing "/opt" "${BACKUP_DIR}/opt.txt"
 
   # APT (Debian/Ubuntu)
   if command -v apt &> /dev/null; then
-    dpkg --get-selections > "${BACKUP_DIR}/${APT_FILE}"
+    dpkg --get-selections > "${BACKUP_DIR}/apt.txt"
     echo "APT packages backed up"
   fi
 
-  # AdGuard backup (Linux)
-  mkdir -p "${BACKUP_DIR}/${ADGUARD_DIR}"
-
-  # Check for AdGuard Home installation and backup in one step
-  if sudo test -d "/opt/AdGuardHome" && sudo test -f "/opt/AdGuardHome/AdGuardHome.yaml"; then
-    echo "Found AdGuard Home installation, backing up configuration..."
-    backup_file "/opt/AdGuardHome/AdGuardHome.yaml" "${BACKUP_DIR}/${ADGUARD_DIR}" "true"
+  # AdGuard Home config is root-owned
+  adguard_conf="/opt/AdGuardHome/AdGuardHome.yaml"
+  if sudo test -f "$adguard_conf"; then
+    mkdir -p "${BACKUP_DIR}/adguard"
+    sudo cp "$adguard_conf" "${BACKUP_DIR}/adguard/"
+    sudo chown "$(whoami):$(id -gn)" "${BACKUP_DIR}/adguard/AdGuardHome.yaml"
+    echo "Backed up $adguard_conf"
   fi
 
   echo "Linux backup successful"
@@ -176,9 +154,8 @@ backup_claude
 backup_obsidian
 
 # SSH config (cross-platform)
-readonly SSH_BACKUP_DIR="ssh"
 if [[ -f "${HOME}/.ssh/config" ]]; then
-  mkdir -p "${BACKUP_DIR}/${SSH_BACKUP_DIR}"
-  cp -L "${HOME}/.ssh/config" "${BACKUP_DIR}/${SSH_BACKUP_DIR}/"
+  mkdir -p "${BACKUP_DIR}/ssh"
+  cp -L "${HOME}/.ssh/config" "${BACKUP_DIR}/ssh/"
   echo "SSH config backed up"
 fi

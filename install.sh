@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
-# Create the backup directory if it doesn't exist
 install_backup_dir="${HOME}/dotfiles/backups/${LOGNAME}/$(date +%Y-%m-%d)"
-
-mkdir -p "${install_backup_dir}"
-echo "Backup dir created"
 
 # dotfiles directory
 dotfiles_dir="${HOME}/dotfiles"
@@ -39,14 +35,8 @@ link_file() {
     fi
 }
 
-# Migrate the pre-move secrets file before anything links or sources it.
-if [[ -f "${dotfiles_dir}/.private" && ! -f "${dotfiles_dir}/shell/private" ]]; then
-    mv "${dotfiles_dir}/.private" "${dotfiles_dir}/shell/private"
-    echo "Moved .private -> shell/private"
-fi
-
 # Shell config: lives in shell/ without a leading dot, linked into $HOME with one.
-# path.sh is sourced by the others, not linked.
+# env.sh is sourced by the others, not linked.
 shell_files=(zshenv zprofile zshrc zprompt bashrc bash_profile bash_prompt aliases prompt_common private)
 
 for file in "${shell_files[@]}"; do
@@ -58,9 +48,9 @@ for file in gitconfig netrc npmrc; do
     link_file "${dotfiles_dir}/.${file}" "${HOME}/.${file}"
 done
 
-# Machine profile from shell/private ("work" or "home"; ZED_PROFILE/CLAUDE_PROFILE are legacy fallbacks)
+# Machine profile from shell/private: "work" or "home"
 [[ -f "${dotfiles_dir}/shell/private" ]] && source "${dotfiles_dir}/shell/private"
-profile="${PROFILE:-${CLAUDE_PROFILE:-${ZED_PROFILE:-home}}}"
+profile="${PROFILE:-home}"
 
 # App configs
 link_file "${dotfiles_dir}/settings/ghostty/config.ghostty" \
@@ -86,26 +76,16 @@ link_file "${dotfiles_dir}/settings/glab/aliases.yml" "${dotfiles_dir}/settings/
 # macOS system settings
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Dock
-  dock_before=$(defaults export com.apple.dock - 2>/dev/null | md5 -q)
   defaults write com.apple.dock "autohide-delay" -float "0"
   defaults write com.apple.dock "static-only" -bool "true"
   defaults write com.apple.dock autohide -bool true
   defaults write com.apple.dock launchanim -bool false
   defaults write com.apple.dock show-recents -bool false
-  dock_after=$(defaults export com.apple.dock - 2>/dev/null | md5 -q)
-  [[ "$dock_before" != "$dock_after" ]] && killall Dock
 
   # Finder
-  finder_before=$(defaults export com.apple.finder - 2>/dev/null | md5 -q)
-  global_ext_before=$(defaults read NSGlobalDomain AppleShowAllExtensions 2>/dev/null)
   defaults write com.apple.finder ShowPathbar -bool true
   defaults write com.apple.finder ShowStatusBar -bool true
   defaults write NSGlobalDomain AppleShowAllExtensions -bool true
-  finder_after=$(defaults export com.apple.finder - 2>/dev/null | md5 -q)
-  global_ext_after=$(defaults read NSGlobalDomain AppleShowAllExtensions 2>/dev/null)
-  if [[ "$finder_before" != "$finder_after" || "$global_ext_before" != "$global_ext_after" ]]; then
-    killall Finder
-  fi
 
   # Keyboard
   defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
@@ -117,14 +97,13 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
   # Screenshots
   mkdir -p "${HOME}/Screenshots"
-  screencapture_before=$(defaults read com.apple.screencapture location 2>/dev/null)
   defaults write com.apple.screencapture location -string "${HOME}/Screenshots"
-  screencapture_after=$(defaults read com.apple.screencapture location 2>/dev/null)
-  # SystemUIServer caches this value; without a restart the write is ignored
-  [[ "$screencapture_before" != "$screencapture_after" ]] && killall SystemUIServer
 
   # Display dimming
   # sudo pmset -a lessbright 0 # rollback - sudo pmset -b lessbright 1
+
+  # Apply the writes above; SystemUIServer caches the screenshot location
+  killall Dock Finder SystemUIServer 2>/dev/null
 fi
 
 # install Homebrew packages from Brewfile
@@ -144,15 +123,11 @@ for dir in skills rules hooks; do
 done
 echo "Claude Code config linked (profile: ${profile})"
 
-# Obsidian settings (vault paths defined in .private)
-if [[ ${#OBSIDIAN_VAULTS[@]} -gt 0 ]]; then
-    for vault_path in "${OBSIDIAN_VAULTS[@]}"; do
-        if [[ -d "$vault_path" ]]; then
-            link_file "${dotfiles_dir}/settings/obsidian/default" "${vault_path}/.obsidian" "obsidian/$(basename "$vault_path")"
-        else
-            echo "Obsidian vault not found: $vault_path, skipping"
-        fi
-    done
-else
-    echo "No OBSIDIAN_VAULTS defined in .private, skipping Obsidian setup"
-fi
+# Obsidian settings (OBSIDIAN_VAULTS defined in shell/private)
+for vault_path in "${OBSIDIAN_VAULTS[@]}"; do
+    if [[ -d "$vault_path" ]]; then
+        link_file "${dotfiles_dir}/settings/obsidian/default" "${vault_path}/.obsidian" "obsidian/$(basename "$vault_path")"
+    else
+        echo "Obsidian vault not found: $vault_path, skipping"
+    fi
+done

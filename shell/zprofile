@@ -1,7 +1,5 @@
-# Login zsh, read after /etc/zprofile — which runs path_helper, rebuilding PATH
-# from /etc/paths{,.d} and appending the old value, so everything zshenv set has
-# just been demoted to the tail. Re-source to re-assert the order.
-_dfp_init="${DOTFILES:-$HOME/dotfiles}/shell/path.sh"
+# /etc/zprofile's path_helper just demoted everything zshenv set; re-assert order.
+_dfp_init="${DOTFILES:-$HOME/dotfiles}/shell/env.sh"
 [ -r "$_dfp_init" ] && . "$_dfp_init"
 unset _dfp_init
 

@@ -1,8 +1,5 @@
-# Compatibility path — the configured setup is zsh, but bash is the login shell
-# on some machines. Read for interactive bash, `bash -l`, and `ssh host 'cmd'`
-# where bash is the login shell; not for `bash -c` or `make`, which have no
-# .zshenv equivalent.
-_dfp_init="${DOTFILES:-$HOME/dotfiles}/shell/path.sh"
+# For machines where bash is the login shell. Not read by `bash -c`.
+_dfp_init="${DOTFILES:-$HOME/dotfiles}/shell/env.sh"
 [ -r "$_dfp_init" ] && . "$_dfp_init"
 unset _dfp_init
 export BASH_SILENCE_DEPRECATION_WARNING=1

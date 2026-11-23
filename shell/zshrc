@@ -17,17 +17,13 @@ setopt EXTENDED_HISTORY
 setopt CORRECT
 setopt INTERACTIVE_COMMENTS
 
-# Completions — interactive-only, so they live here rather than in .zprofile.
-# fpath must be extended before compinit runs.
+# fpath must be extended before compinit.
 if [[ -d /opt/homebrew/share/zsh/site-functions ]]; then
   fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
 fi
 
 autoload -Uz compinit
-# Only rebuild the completion cache once a day. Array assignment, not [[ -n … ]]:
-# zsh does no filename generation inside [[ ]], so the glob would be a literal
-# and the test always true — compinit -C forever, and new fpath entries never
-# picked up. Bare qualifiers here also avoid needing EXTENDED_GLOB.
+# Rebuild the cache daily. Array, not [[ ]]: no globbing happens inside [[ ]].
 _zcompdump=(${ZDOTDIR:-$HOME}/.zcompdump(Nmh-24))
 if (( $#_zcompdump )); then
   compinit -C  # fresh enough, skip the security check

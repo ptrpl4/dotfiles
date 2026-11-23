@@ -12,8 +12,6 @@ Thumbs.db
 
 # Private Information
 shell/private
-# pre-move location; keep until every machine is migrated
-.private
 .private-gitconfig
 .netrc
 .npmrc

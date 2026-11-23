@@ -1,13 +1,6 @@
-# Shared by zprompt and bash_prompt. Returns plain text — no colour, no
-# brackets — so each shell can wrap it in its own non-printing markers.
-#
-# for-each-ref reads refs only, so the cost is flat in worktree size. `git
-# status` was tried and is much worse where it matters: on a 2469-file repo it
-# runs 16 ms with a warm index but 280-300 ms once stat data is stale, which is
-# the state after every checkout, rebase or build — exactly when the prompt is
-# looked at. for-each-ref stays at 12 ms throughout. It does grow with the
-# branch count (200 branches ≈ 25 ms) since it resolves upstream tracking per
-# ref, which is the better trade.
+# Plain text; each prompt adds its own colour markers.
+# for-each-ref, not `git status`: flat cost (~12 ms) regardless of worktree
+# size; status hit ~300 ms on a stale index.
 prompt_git() {
     local out line rest head up track ahead behind sync=''
 
@@ -17,8 +10,7 @@ prompt_git() {
 
     while IFS= read -r line; do
         case "$line" in '*|'*) rest="${line#\*|}" ;; *) continue ;; esac
-        # Parse right to left: a branch name may contain '|', the other two
-        # fields cannot.
+        # Right to left: only the branch name may contain '|'.
         track="${rest##*|}"; rest="${rest%|*}"
         up="${rest##*|}";    head="${rest%|*}"
         break
@@ -26,12 +18,10 @@ prompt_git() {
 $out
 EOF
 
-    # Detached HEAD carries the marker on no ref at all. rev-parse honours
-    # core.abbrev, so the oid matches what every other git command here prints.
+    # Detached HEAD: no ref carries the marker.
     [ -n "$head" ] || head=$(git --no-optional-locks rev-parse --short HEAD 2>/dev/null) || return
 
-    # An empty track means in sync; without an upstream it means nothing, hence
-    # the separate %(upstream) field.
+    # Empty track means in sync only when an upstream exists.
     if [ -n "$up" ]; then
         if [ "$track" = gone ]; then
             sync=':gone'

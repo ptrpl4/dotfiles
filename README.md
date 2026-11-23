@@ -39,9 +39,9 @@ shell reads it, not by topic.
 
 | File | Read by | Holds |
 |---|---|---|
-| `path.sh` | sourced by the others | **every** PATH entry |
-| `zshenv` | every zsh, including `zsh -c` | sources `path.sh`; minimal and silent |
-| `zprofile` | login zsh, **after** `path_helper` | re-sources `path.sh`; `EDITOR` |
+| `env.sh` | sourced by the others | **every** PATH entry |
+| `zshenv` | every zsh, including `zsh -c` | sources `env.sh`; minimal and silent |
+| `zprofile` | login zsh, **after** `path_helper` | re-sources `env.sh`; `EDITOR` |
 | `zshrc` | interactive zsh | history, `setopt`, completions, prompt, aliases |
 
 PATH is built in one place so interactive shells, `zsh -c`, Makefiles and agent
@@ -50,23 +50,23 @@ tooling all agree. `path_helper` (run by `/etc/zprofile`) rebuilds PATH from
 `zshenv` entries get demoted to the tail in login shells, and everything from
 `/etc/paths{,.d}` — including `/usr/local/bin` — is missing entirely from
 non-login ones. Hence `zprofile` re-sources, and the entries that carry real
-tools (`/usr/local/bin`, go, podman) are re-added in `path.sh`. Apple's own
+tools (`/usr/local/bin`, go, podman) are re-added in `env.sh`. Apple's own
 `/etc/paths.d` entries are deliberately left login-only.
 
 The `bash*` files are a compatibility shim for agent tooling and bash-login
 hosts, not part of the setup.
 
 Installers append to whichever rc file they pick and win by running last. Move
-the line into `path.sh` if it should also reach non-interactive shells.
+the line into `env.sh` if it should also reach non-interactive shells.
 
 ### Troubleshooting
 
 - Check `~/dotfiles/backups` — previous versions of overwritten files are saved there
-- A tool missing in a Makefile, editor terminal or agent shell → add it to `shell/path.sh`, not to a per-shell file
+- A tool missing in a Makefile, editor terminal or agent shell → add it to `shell/env.sh`, not to a per-shell file
 - Verify a shell change in a clean shell: `env -i HOME="$HOME" TERM=xterm zsh -lc 'print -l $path'`. Use `-c` / `-ic` for the non-login and interactive paths
 - Config change stopped tracking? `readlink ~/.zshrc` — an installer that writes-temp-then-renames replaces the symlink with a regular file
 - Aliases are interactive-only, so anything defined in `shell/aliases` or `shell/private` is absent from scripts and agent shells
-- `n` comes from the Brewfile but installs no Node runtime — `sudo n lts` once on a new machine. No `N_PREFIX` is set, so runtimes land in `/usr/local/bin`, which `path.sh` re-adds for non-login shells
+- `n` comes from the Brewfile but installs no Node runtime — `n lts` once on a new machine, **without sudo**. `env.sh` sets `N_PREFIX=$HOME/.local`, so runtimes land in `~/.local/bin`; sudo's env_reset drops the variable and installs to `/usr/local` instead
 - Completions not picking up a newly installed tool? The cache rebuilds once a day; `rm ~/.zcompdump` to force it
 
 ## Tools

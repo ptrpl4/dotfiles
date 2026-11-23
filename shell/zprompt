@@ -1,21 +1,11 @@
 [[ -r "${HOME}/.prompt_common" ]] && source "${HOME}/.prompt_common"
 
-# Grey is the literal SGR rather than %F{8}, which resolves through terminfo:
-# at 8 colours (TERM=xterm, screen) it degrades to %f and the grey disappears,
-# and under xterm-ghostty — which has no system terminfo entry, Ghostty ships
-# its own — it emits a bare \e[38m. Wrapped in %{ %} so zsh still counts the
-# width as zero.
+# Literal SGR, not %F{8}: terminfo drops grey at 8 colours and under xterm-ghostty.
 _zp_gray=$'%{\e[90m%}'
 _zp_fg=$'%{\e[39m%}'
 
-# Clock, exit status and job count are prompt escapes (%D, %(?..), %(1j..)) —
-# no forks, and no precmd bookkeeping to be clobbered by direnv or zoxide. The
-# git segment is the only work done per prompt.
-#
-# PS1 is rebuilt in precmd rather than left to PROMPT_SUBST: zsh only counts
-# %{ %} that it expanded itself, so escapes arriving through $(...) corrupt the
-# width and glitch redraws on long lines. Assembling here also lets the branch
-# name be %-escaped, so 'feat/100%off' cannot inject prompt escapes.
+# Built in precmd, not PROMPT_SUBST: zsh miscounts %{ %} arriving via $(...),
+# and the branch name gets %-escaped here.
 autoload -Uz add-zsh-hook
 
 _zprompt() {
@@ -35,7 +25,5 @@ add-zsh-hook precmd _zprompt
 
 PS2="${_zp_gray}───>${_zp_fg} "
 
-# Deliberately not exported: prompts are shell-local. An exported PS1 renders as
-# literal zsh escapes in interactive bash children, and defeats the
-# `if [ -z "$PS1" ]; then return; fi` interactivity guard that this machine's own
-# /etc/bashrc opens with (Debian's /etc/bash.bashrc uses the same test).
+# Not exported: bash children would show zsh escapes and /etc/bashrc's
+# `[ -z "$PS1" ]` interactivity guard would break.
